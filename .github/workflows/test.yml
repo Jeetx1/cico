@@ -1,0 +1,16 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: chmod +x run_tests.sh build.sh
+      - run: npm install --silent
+      - run: npx playwright install --with-deps chromium
+      - run: ./run_tests.sh
+      - name: docs/ is the build of src/ and pwa/
+        run: git diff --exit-code docs/
