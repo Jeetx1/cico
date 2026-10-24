@@ -1,0 +1,16 @@
+# your real data: never in the repo (a GitHub Pages repo is public)
+private/
+*CALORIE LOG*.json
+*CICO DATA*.json
+*BACKUP*
+# dated offline copies of the app live in the app folder, not here
+*_CICO.html
+*CALORIE*TRACKER*.html
+# test output and tooling
+tests/shots/
+node_modules/
+package-lock.json
+__pycache__/
+.DS_Store
+Thumbs.db
+desktop.ini

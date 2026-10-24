@@ -1,0 +1,5 @@
+# keep LF everywhere (the build is a byte concatenation; CI compares docs/ byte for byte), CRLF only for build.cmd
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.png binary
+*.jpg binary

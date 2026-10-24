@@ -1,0 +1,12 @@
+{
+  "name": "cico",
+  "private": true,
+  "description": "CICO calorie tracker: a single-file HTML app with its data in a separate .json file.",
+  "scripts": {
+    "build": "./build.sh",
+    "test": "./run_tests.sh"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

@@ -1,0 +1,61 @@
+<!-- CICO · app effects (the bite, day level), scoped to html.fx-* -->
+<style id="tool-effects">
+/* =====================================================================
+   CICO · tool effects, the same in every theme (each theme colours them through its tool tokens).
+   THE BITE (signature, html.fx-bite): the logged kcal fly into the day's ring, the ring swallows them and the arc grows.
+   DAY LEVEL (optional extra, html.fx-daylevel): the background fills like a glass as the day's kcal rise.
+   Both animate transform and opacity only, and both are pure decoration: switched off, the tool is the same.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- the bite */
+.biss{position:fixed;left:0;top:0;z-index:90;pointer-events:none;will-change:transform,opacity}
+.biss i{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:var(--bite-core);
+  box-shadow:0 0 0 2px var(--bite-glow),0 0 14px 4px var(--bite-glow),0 0 32px 10px var(--bite-glow)}
+.biss b{position:absolute;left:13px;top:-13px;white-space:nowrap;font-family:var(--font-num);font-weight:var(--fw-num);font-size:19px;letter-spacing:var(--ls-num);
+  color:var(--bite-text);text-shadow:0 2px 14px var(--bite-glow)}
+.biss.geist b{display:none}
+.biss.geist i{box-shadow:0 0 12px 3px var(--bite-glow)}
+/* Glass: an ice droplet, round at the front, its tip trailing behind */
+:root[data-theme="glass"] .biss i{border-radius:50% 50% 50% 0;transform:rotate(calc(var(--a,0deg) + 45deg));
+  background:radial-gradient(circle at 35% 30%,#fff 0 22%,var(--bite-core) 40%,rgba(169,205,243,.85) 100%)}
+/* Ember: a small white-hot core in an orange halo */
+:root[data-theme="ember"] .biss i{width:10px;height:10px;left:-5px;top:-5px;box-shadow:0 0 0 2px rgba(255,190,90,.9),0 0 12px 5px var(--bite-glow),0 0 36px 14px rgba(255,80,20,.45)}
+/* Prism: a short beam, aligned with its path */
+:root[data-theme="prism"] .biss i{width:30px;height:5px;left:-15px;top:-2.5px;border-radius:5px;transform:rotate(var(--a,0deg));
+  background:linear-gradient(90deg,rgba(110,86,255,0),#6E56FF 30%,#16B2E3 55%,#fff 80%,#fff);box-shadow:0 0 14px 3px var(--bite-glow)}
+
+/* the ring swallows: a short pulse (scale only) and a wave of light leaving its edge */
+.ringe.schluck{animation:schluck .62s var(--ease-spring)}
+@keyframes schluck{0%{transform:scale(1)}28%{transform:scale(1.075)}100%{transform:scale(1)}}
+.ringe .welle{position:absolute;inset:4%;border-radius:50%;pointer-events:none;box-shadow:0 0 0 3px var(--bite-glow),0 0 26px 6px var(--bite-glow);opacity:0;
+  animation:welle .9s var(--ease) forwards}
+@keyframes welle{0%{opacity:.95;transform:scale(.86)}100%{opacity:0;transform:scale(1.22)}}
+
+/* ---------------------------------------------------------------- the day level */
+.pegel{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:0;transition:opacity 1s ease}
+html.fx-daylevel .pegel.an{opacity:1}
+html.fx-daylevel .ambient{opacity:0}
+.pegel__fill{position:absolute;left:0;right:0;top:0;height:100%;transform:translate3d(0,100%,0);transition:transform 1.8s cubic-bezier(.22,1,.36,1);will-change:transform}
+.pegel__fill > i{position:absolute;inset:0;transition:opacity 1.2s ease}
+.pegel__fill .unter{background:var(--level-fill)}
+.pegel__fill .ueber{background:var(--level-over);opacity:0}
+.pegel.ueber .pegel__fill .ueber{opacity:1}
+.pegel.ueber .pegel__fill .unter{opacity:0}
+/* the surface: a bright line with a soft glow and one slow glint running along it */
+.pegel__edge{position:absolute;left:0;right:0;top:-1px;height:2px;background:var(--level-edge);box-shadow:0 0 18px 2px var(--level-glow)}
+.pegel__edge b{position:absolute;top:-1px;left:0;width:22vw;height:4px;border-radius:4px;background:linear-gradient(90deg,transparent,var(--level-edge),transparent);
+  filter:blur(1px);animation:glanz 9s linear infinite;opacity:.9}
+@keyframes glanz{from{transform:translate3d(-25vw,0,0)}to{transform:translate3d(105vw,0,0)}}
+/* the target: a fine dashed line at 78 % of the glass, labelled once on the right */
+.pegel__ziel{position:absolute;left:0;right:0;top:22%;height:0;border-top:1px dashed var(--level-line);transition:opacity .6s ease}
+.pegel__ziel span{position:absolute;right:calc(14px + var(--sar));top:-19px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--level-line)}
+.pegel.ohneziel .pegel__ziel{opacity:0}
+@media (max-width:899px){ .pegel__ziel span{display:none} }
+
+@media (prefers-reduced-motion:reduce){
+  .ringe.schluck,.ringe .welle{animation:none!important}
+  .ringe .welle{display:none}
+  .pegel__fill{transition:none}
+  .pegel__edge b{animation:none;display:none}
+}
+</style>
