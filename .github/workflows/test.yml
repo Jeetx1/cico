@@ -3,6 +3,8 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Zurich   # date bugs that only show outside UTC fail here too
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

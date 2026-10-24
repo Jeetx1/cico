@@ -152,6 +152,11 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
     await ctx.close();
   }
 
+  // ---------------------------------------------------------------- offline cache: the origin jeetx1.github.io is shared with the other apps
+  const sw = fs.readFileSync(path.join(__dirname, '../docs/sw.js'), 'utf8');
+  check(/k\.startsWith\('cico-'\) && k !== CACHE/.test(sw), 'sw.js clears only its own caches (RISE keeps its offline copy)');
+  check(/cache: 'reload'/.test(sw), 'sw.js fills a new cache past the browser cache (never the previous build)');
+
   await b.close();
   console.log((bad ? 'FAILED ' : 'ok ') + ok + '/' + (ok + bad) + ' interface checks');
   process.exit(bad ? 1 : 0);

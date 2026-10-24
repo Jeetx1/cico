@@ -1,9 +1,9 @@
-# your real data: never in the repo (a GitHub Pages repo is public)
+# your real data: never in the repo (a GitHub Pages repo is public).
+# Every .json is blocked whatever its name (iPhone saves can add " 1" or " (1)"); only these two belong here:
 private/
-*CALORIE LOG*.json
-*CICO DATA*.json
-*_CICO.json
-*CICO COPY*.json
+*.json
+!package.json
+!tests/fixture.json
 *BACKUP*
 # dated offline copies of the app live in the app folder, not here
 *_CICO.html
