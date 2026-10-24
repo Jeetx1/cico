@@ -63,7 +63,7 @@ window.THEME_FX = {
       if (!el || REDUCED || !api.isOn('liquid')) return;
       el.classList.add('is-moving'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('is-moving'), 150);
     };
-    api.on($('#tabs'), 'dl:tab', () => squish($('#tabs .tabs__indicator i')));
+    api.on($('#tabs'), 'dl:tab', () => squish($('#tabs .tabs__indicator i')));   // tools without top tabs (EVEN: side navigation) skip this
     api.on(document, 'dl:seg', e => squish(e.target.querySelector('.segmented__thumb > i')));
 
     /* float: small tiles lift and press; every tile below the fold rises in once */
@@ -325,7 +325,7 @@ window.THEME_FX = (function(){
       { id: 'rim', kind: 'signature', name: 'Spectral edge', desc: 'Every panel has a hairline of split light, and a glint sits on the edge that faces the light. Primary buttons get a flash of light on hover.' },
       { id: 'focus', kind: 'signature', name: 'Refraction focus', desc: 'Key figures arrive split into colour, then snap into focus.' },
       { id: 'sweep', kind: 'extra', name: 'Save beam', desc: 'A thin beam of spectrum crosses the screen when a save succeeds.' },
-      { id: 'phonetilt', kind: 'extra', off: true, name: 'Phone tilt', desc: 'On the iPhone, tilting the phone moves the light. Asks for motion access once; stays on after that (on the iPhone the first tap after opening reconnects it).' }
+      { id: 'phonetilt', kind: 'extra', off: true, name: 'Phone tilt', desc: 'Tilting the phone moves the light. On the iPhone, iOS forgets the motion access whenever the app closes, so the app never asks by itself: switch it on when you want it (one prompt for that visit).' }
     ],
 
     numberRevealEffect: 'focus',
@@ -363,19 +363,14 @@ window.THEME_FX = (function(){
       if (fine) api.on(document, 'pointermove', e => {
         L.tx = e.clientX / window.innerWidth * 2 - 1; L.ty = e.clientY / window.innerHeight * 2 - 1; lastInput = performance.now();
       }, { passive: true });
-      /* phone tilt: the switch is remembered per device, so it has to work after a reload or a look change too.
-         Android and others: on at once. iPhone: motion access may only be asked during a tap, so the first tap
-         anywhere asks (iOS shows its prompt only the first time; after that it just answers). No toggling needed. */
+      /* phone tilt. Android and others: on whenever the switch is on. iPhone: iOS forgets the motion access when the app
+         closes and may only ask during a tap, so the app never asks by itself (an automatic prompt cost the first tap,
+         e.g. "Open your file", and came back on every launch). On the iPhone the switch is a per-visit choice: it opens
+         off, and switching it on asks once for this visit. */
       const D = window.DeviceOrientationEvent;
       if (api.isOn('phonetilt')){
         if (!D || typeof D.requestPermission !== 'function') tiltOn = true;
-        else {
-          const ask = () => { if (tiltOn || !api.isOn('phonetilt')) return;
-            D.requestPermission().then(s => { tiltOn = s === 'granted'; stop(); }).catch(() => { /* not a tap the browser counts: wait for the next one */ }); };
-          const stop = () => { document.removeEventListener('touchend', ask, true); document.removeEventListener('click', ask, true); };
-          api.on(document, 'touchend', ask, true); api.on(document, 'click', ask, true);
-          this._askStop = stop;
-        }
+        else api.later(() => { if (window.Kit && Kit.setEffect && api.isOn('phonetilt') && !tiltOn) Kit.setEffect('phonetilt', false); }, 0);
       }
       api.on(window, 'deviceorientation', e => {
         if (!tiltOn || !api.isOn('phonetilt') || e.gamma == null || e.beta == null) return;
@@ -424,7 +419,7 @@ window.THEME_FX = (function(){
     },
 
     destroy(){
-      tiltOn = false; if (this._askStop) this._askStop(); this._askStop = null;
+      tiltOn = false;
       if (this._io) this._io.disconnect();
       document.querySelectorAll('.card').forEach(c => { c._glint = null; });
     }
@@ -493,7 +488,8 @@ function makeFxApi(){
   const reg = { alive: true, offs: [], nodes: [], timers: new Set(), obs: [] };
   const api = {
     root, REDUCED, TOUCH, $, $$, h, tok, isOn, ambient: () => $('#ambient'), toast: (m, o) => cfg.toast && cfg.toast(m, o),
-    on(t, type, fn, opt){ t.addEventListener(type, fn, opt); reg.offs.push(() => t.removeEventListener(type, fn, opt)); },
+    /* a missing target (a tool without that element, e.g. no #tabs) is skipped, never an error */
+    on(t, type, fn, opt){ if (!t) return; t.addEventListener(type, fn, opt); reg.offs.push(() => t.removeEventListener(type, fn, opt)); },
     add(node, parent){ (parent || $('#ambient')).appendChild(node); reg.nodes.push(node); return node; },
     /* run fn on every element matching sel, now and whenever the tool draws new ones (pages re-render) */
     each(sel, fn){

@@ -24,6 +24,8 @@ const state = () => ({ theme: document.documentElement.dataset.theme,
   async function page(opts, label){
     const ctx = await b.newContext(opts), p = await ctx.newPage(), errs = [];
     p.on('pageerror', e => errs.push(e.message));
+    /* a theme's effects module that fails is caught by the kit (the tool keeps working) but must not pass unnoticed */
+    p.on('console', m => { if (/Effects module failed/.test(m.text())) errs.push('effects module failed: ' + m.text().slice(0, 200)); });
     await p.route('**/fonts.googleapis.com/**', r => r.abort());
     await p.route('**/fonts.gstatic.com/**', r => r.abort());
     return { ctx, p, errs, label };
