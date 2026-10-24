@@ -13,7 +13,9 @@ function lokalSchreiben(sofort){
 }
 function aendern(){ S.dirty = true; malSichern(); lokalSchreiben(); }
 
-function dataName(){ return TODAY + '_CALORIE LOG DATA.json'; }
+function dataName(){ return TODAY + '_CICO.json'; }
+/* a file opened under the old name (…_CALORIE LOG DATA.json) is not written back into: the picker offers the new name once */
+function neuerName(n){ return /_CICO\.json$/i.test(n || ''); }
 function lesen(text){
   const t = String(text || '').trim();
   if (t.charAt(0) !== '{') throw new Error('Pick the calorie log .json file.');
@@ -93,7 +95,7 @@ async function speichern(alsKopie){
     const r = await Kit.folder.write(dataName(), blob);
     if (r){ FILE = { name: r.name, handle: null }; return gespeichert(r.name, false, r.folder); }
   }
-  if (!alsKopie && FSA && FILE.handle){
+  if (!alsKopie && FSA && FILE.handle && neuerName(FILE.name)){
     try {
       if (FILE.handle.queryPermission && await FILE.handle.queryPermission({ mode: 'readwrite' }) !== 'granted' &&
           (await FILE.handle.requestPermission({ mode: 'readwrite' })) !== 'granted') throw new Error('no access');
@@ -101,7 +103,7 @@ async function speichern(alsKopie){
       return gespeichert(FILE.name);
     } catch (e){ /* fall through to the picker */ }
   }
-  const r = await ablegen(blob, alsKopie ? TODAY + '_CALORIE LOG COPY.json' : dataName());
+  const r = await ablegen(blob, alsKopie ? TODAY + '_CICO COPY.json' : dataName());
   if (!r.ok){ if (r.err) toast('Not saved: ' + r.err.message, true); return; }
   if (alsKopie) return toast('Copy saved as ' + r.name);
   if (r.handle){ FILE = { name: r.name, handle: r.handle }; idbSchreiben('datei', r.handle); }

@@ -102,7 +102,7 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   await pg.keyboard.press('Escape'); await pg.waitForTimeout(400);
   await pg.evaluate(() => Kit.set('prism', 'user')); await pg.waitForTimeout(300);
   const saved = await speichere(pg);
-  check(saved.name === '2026-10-14_CALORIE LOG DATA.json', 'file named by the save date: ' + saved.name);
+  check(saved.name === '2026-10-14_CICO.json', 'file named by the save date: ' + saved.name);
   check(!(await pg.getAttribute('#sichern', 'class')).includes('is-dirty'), 'Save stops blinking after saving');
   check(saved.data.app === 'calorie-tracker' && saved.data.settings && saved.data.settings.theme === 'prism', 'the look travels in the file');
   check(saved.data.days['2026-10-14'].items.length === vorher + 1, 'saved file holds the new item');

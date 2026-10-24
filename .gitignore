@@ -2,6 +2,8 @@
 private/
 *CALORIE LOG*.json
 *CICO DATA*.json
+*_CICO.json
+*CICO COPY*.json
 *BACKUP*
 # dated offline copies of the app live in the app folder, not here
 *_CICO.html

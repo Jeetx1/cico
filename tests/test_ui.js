@@ -41,7 +41,7 @@ function sample(){
     const ctx = await b.newContext({ viewport: vp, deviceScaleFactor: 2, hasTouch: !!touch, isMobile: !!touch });
     await ctx.addInitScript(([data, theme]) => {
       try {
-        localStorage.setItem('calorieTracker.data.v1', JSON.stringify({ at: new Date().toISOString(), name: '2026-10-20_CALORIE LOG DATA.json', dirty: false, data }));
+        localStorage.setItem('calorieTracker.data.v1', JSON.stringify({ at: new Date().toISOString(), name: '2026-10-20_CICO.json', dirty: false, data }));
         if (theme) localStorage.setItem('dl.theme.calorie-tracker', theme);
       } catch (e){}
     }, [sample(), theme]);

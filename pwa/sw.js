@@ -1,7 +1,7 @@
 /* CICO offline cache for the hosted app. The page and its icons come from the cache at once (works in flight mode);
    in the background the network is asked for a newer copy, which is used from the next start on.
    The cache name carries the build version (same as <meta name="build"> in src/01_head.html): a new build = a new cache. */
-const CACHE = 'cico-2026-10-24.1';
+const CACHE = 'cico-2026-10-24.2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
