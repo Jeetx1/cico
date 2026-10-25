@@ -254,7 +254,7 @@ function baueTabs(){
   $('#einstellungen').onclick = () => zieleDialog();
   /* the look: one button in the top row, next to the settings */
   if (!$('#look')){ const lb = Kit.lookButton(); lb.id = 'look'; $('#einstellungen').parentNode.insertBefore(lb, $('#einstellungen')); }
-  const o = $('#ordner'); o.hidden = !Kit.folder.can; o.onclick = ordnerWaehlen;
+  const o = $('#ordner'); o.hidden = !Kit.folder.can; o.onclick = ordnerDialog;
 }
 function zeigeTab(id, erst){
   const vorher = S.tab; S.tab = id;

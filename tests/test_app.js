@@ -152,6 +152,75 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
     await ctx.close();
   }
 
+  // ---------------------------------------------------------------- computer: saved elsewhere since it was opened (the iPhone saved in between)
+  const platte = `window.__disk = {};
+    const mk = n => ({ name: n, kind: 'file', getFile: async () => new File([window.__disk[n] || ''], n),
+      createWritable: async () => { let s = ''; return { write: async b => { s += typeof b === 'string' ? b : await b.text(); }, close: async () => { window.__disk[n] = s; } }; },
+      queryPermission: async () => 'granted', requestPermission: async () => 'granted' });
+    window.showOpenFilePicker = async () => [mk('2026-10-14_CICO.json')];
+    window.showSaveFilePicker = async o => mk(o.suggestedName);`;
+  ({ ctx, pg, errs } = await neu({ clock: clock(2026, 9, 14, 13, 10).replace('window.showOpenFilePicker=undefined; window.showSaveFilePicker=undefined;', '') + platte }));
+  await pg.evaluate(t => { window.__disk['2026-10-14_CICO.json'] = t; }, fs.readFileSync(FIX, 'utf8'));
+  await pg.click('#wahl button:has-text("Open your data file")'); await pg.waitForTimeout(1200);
+  check(await pg.isVisible('#shell'), 'computer: the file opens through the file picker');
+  const ANDERSWO = '2026-10-14T09:00:00.000Z';
+  const aufDisk = () => pg.evaluate(() => JSON.parse(window.__disk['2026-10-14_CICO.json']).saved);
+  await pg.evaluate(s => { const o = JSON.parse(window.__disk['2026-10-14_CICO.json']); o.saved = s; window.__disk['2026-10-14_CICO.json'] = JSON.stringify(o); }, ANDERSWO);
+  await pg.click('#sichern'); await pg.waitForTimeout(500);
+  check(await pg.isVisible('.blatt:has-text("Saved elsewhere since you opened it")'), 'saved elsewhere since it was opened: Save asks first');
+  await pg.click('.blatt button:has-text("Cancel")'); await pg.waitForTimeout(400);
+  check(await aufDisk() === ANDERSWO, 'Cancel leaves the other version untouched');
+  await pg.click('#sichern'); await pg.waitForTimeout(500);
+  await pg.click('.blatt button:has-text("Replace it")'); await pg.waitForTimeout(500);
+  check(await aufDisk() !== ANDERSWO, 'Replace it writes this window’s version');
+  await pg.click('#sichern'); await pg.waitForTimeout(500);
+  check(!(await pg.isVisible('.blatt:has-text("Saved elsewhere")')), 'the next save goes straight in (nothing saved elsewhere since)');
+  check(!errs.length, 'no script errors (file picker, saved elsewhere): ' + errs.join('; '));
+  await ctx.close();
+
+  // ---------------------------------------------------------------- Save to folder: today's file into the app folder, the one it replaces into 02 BACKUP
+  const ordnerFS = `(() => {
+    const nf = () => new DOMException('no', 'NotFoundError');
+    const fakeFile = (n, t) => { const f = { kind: 'file', name: n, _t: t || '', getFile: async () => new File([f._t], n),
+      createWritable: async () => { let s = ''; return { write: async b => { s += typeof b === 'string' ? b : await b.text(); }, close: async () => { f._t = s; } }; },
+      queryPermission: async () => 'granted', requestPermission: async () => 'granted' }; return f; };
+    const fakeDir = n => { const kids = new Map(); const d = { kind: 'directory', name: n, kids, gone: false,
+      queryPermission: async () => 'granted', requestPermission: async () => 'granted', isSameEntry: async o => o === d,
+      getFileHandle: async (x, o) => { if (d.gone) throw nf(); let f = kids.get(x); if (!f){ if (!(o && o.create)) throw nf(); f = fakeFile(x); kids.set(x, f); } return f; },
+      getDirectoryHandle: async (x, o) => { let f = kids.get(x); if (!f){ if (!(o && o.create)) throw nf(); f = fakeDir(x); kids.set(x, f); } return f; },
+      removeEntry: async x => { if (!kids.delete(x)) throw nf(); },
+      values: () => { const it = kids.values(); return { next: async () => { if (d.gone) throw nf(); return it.next(); }, [Symbol.asyncIterator](){ return this; } }; } }; return d; };
+    const app = fakeDir('CICO'), bkp = fakeDir('02 BACKUP'); app.kids.set('02 BACKUP', bkp);
+    window.__app = app; window.__bkp = bkp; window.__fakeFile = fakeFile;
+    window.showOpenFilePicker = async () => [app.kids.get('2026-10-13_CICO.json')];
+    window.showSaveFilePicker = async o => fakeFile(o.suggestedName);
+    window.showDirectoryPicker = async () => app;
+  })();`;
+  ({ ctx, pg, errs } = await neu({ clock: clock(2026, 9, 14, 13, 10).replace('window.showOpenFilePicker=undefined; window.showSaveFilePicker=undefined; window.showDirectoryPicker=undefined;', '') + ordnerFS }));
+  await pg.evaluate(t => { const o = JSON.parse(t); o.saved = '2026-10-13T19:00:00.000Z'; window.__app.kids.set('2026-10-13_CICO.json', window.__fakeFile('2026-10-13_CICO.json', JSON.stringify(o)));
+    window.__app.kids.set('notes.md', window.__fakeFile('notes.md', '# pointer')); }, fs.readFileSync(FIX, 'utf8'));
+  const inhaltOrdner = () => pg.evaluate(() => [[...window.__app.kids.keys()].sort().join('|'), [...window.__bkp.kids.keys()].sort().join('|')]);
+  await pg.click('#wahl button:has-text("Open your data file")'); await pg.waitForTimeout(1200);
+  await pg.click('#ordner'); await pg.waitForTimeout(400);
+  await pg.click('.blatt button:has-text("Choose")'); await pg.waitForTimeout(800);
+  check((await pg.innerText('#toasts')).includes('Backups go to “02 BACKUP”'), 'Save to folder: choosing the app folder finds its 02 BACKUP by itself');
+  await pg.click('.blatt button:has-text("Save now")'); await pg.waitForTimeout(800);
+  let [imApp, imBackup] = await inhaltOrdner();
+  check(imApp === '02 BACKUP|2026-10-14_CICO.json|notes.md' && imBackup === '2026-10-13_CICO.json', 'today’s file goes into the app folder, the one it replaces into 02 BACKUP, nothing else is touched (' + imApp + ' / ' + imBackup + ')');
+  await pg.click('#sichern'); await pg.waitForTimeout(600);
+  check(!(await pg.isVisible('.blatt:has-text("Replace it")')) && (await inhaltOrdner())[0] === imApp, 'saving again the same day goes straight into today’s file');
+  await pg.evaluate(() => { const f = window.__app.kids.get('2026-10-14_CICO.json'), o = JSON.parse(f._t); o.saved = '2026-10-14T05:00:00.000Z'; f._t = JSON.stringify(o); });
+  await pg.click('#sichern'); await pg.waitForTimeout(600);
+  check(await pg.isVisible('.blatt:has-text("Today’s file is already there")'), 'today’s file that is not this window’s version: Save asks first');
+  await pg.click('.blatt button:has-text("Replace it")'); await pg.waitForTimeout(800);
+  [imApp, imBackup] = await inhaltOrdner();
+  check(imBackup === '2026-10-13_CICO.json|2026-10-14_CICO.json' && imApp.includes('2026-10-14_CICO.json'), 'Replace it: the old one goes to 02 BACKUP first, nothing is deleted (' + imBackup + ')');
+  await pg.evaluate(() => { window.__app.gone = true; });
+  await pg.click('#sichern'); await pg.waitForTimeout(800);
+  check((await pg.innerText('#toasts')).includes('cannot be found any more') && await pg.isVisible('.blatt:has-text("Save to folder")'), 'a folder that was moved or renamed: the app says so and asks for it again');
+  check(!errs.length, 'no script errors (Save to folder): ' + errs.join('; '));
+  await ctx.close();
+
   // ---------------------------------------------------------------- offline cache: the origin jeetx1.github.io is shared with the other apps
   const sw = fs.readFileSync(path.join(__dirname, '../docs/sw.js'), 'utf8');
   check(/k\.startsWith\('cico-'\) && k !== CACHE/.test(sw), 'sw.js clears only its own caches (RISE keeps its offline copy)');

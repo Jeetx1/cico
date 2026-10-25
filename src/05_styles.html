@@ -264,6 +264,12 @@
 .aktion{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
 .aktion .btn{flex:1;max-width:240px}
 .aktion .links{margin-right:auto;flex:none}
+/* Save to folder: one row per folder (name + Choose/Change) */
+.ordnerzeile{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--hairline)}
+.ordnerzeile small{display:block;color:var(--t3);font-size:12px;margin-bottom:2px}
+.ordnerzeile b{font-weight:600;color:var(--t1);overflow-wrap:anywhere}
+/* three choices (saved elsewhere): stacked full width, the main one on top (three never fit one row of a sheet) */
+.aktion.drei{flex-direction:column-reverse;align-items:stretch}.aktion.drei .btn{max-width:none;flex:none;width:100%}
 .gramm{display:flex;align-items:baseline;justify-content:center;gap:6px;margin:6px 0 4px}
 .gramm input{width:3ch;caret-color:var(--accent);max-width:62vw;text-align:center;font-family:var(--font-num);font-size:52px;font-weight:var(--fw-num);letter-spacing:var(--ls-kpi);border:0;background:transparent;outline:none;color:var(--text);padding:0}
 .gramm em{font-style:normal;font-size:20px;color:var(--text-3);font-weight:600}
