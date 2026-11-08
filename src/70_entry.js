@@ -66,7 +66,7 @@ function wischZeile(zeile, oeffnen, weg){
   };
   return box;
 }
-function geheZuTag(iso){ S.tag = iso; S.tagGewaehlt = true; periodeFolgt(iso); seiteEntry(); }
+function geheZuTag(iso){ lichtRuht(); S.tag = iso; S.tagGewaehlt = true; periodeFolgt(iso); seiteEntry(); }
 /* the Overview period follows the day: swiping into another month moves the month (and year) with it */
 function periodeFolgt(iso){
   const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7)) - 1;
@@ -86,6 +86,7 @@ function malTag(){ if (S.tab === 'overview') seiteOverview(); else seiteEntry();
 function tagSlide(iso, richtung, startX){
   if (slideLaeuft || !iso) return;
   const el = seiteVon(S.tab); if (!el) return;
+  lichtRuht();
   const W = Math.max(320, window.innerWidth), wechsel = () => {
     S.tag = iso; S.tagGewaehlt = true; periodeFolgt(iso);
     malTag();

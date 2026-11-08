@@ -109,7 +109,12 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   const heiss = await pg.getAttribute('#tabs button[data-tab=foods]', 'class');
   await pg.mouse.up(); await pg.waitForTimeout(500);
   check(heiss.includes('is-hot') && await pg.isVisible('#p-foods') && (await pg.getAttribute('#seitenknopf', 'aria-expanded')) === 'false', 'press and slide to Foods, let go: Foods opens and the menu closes');
-  await seite(pg, 'overview'); await pg.waitForTimeout(400);
+  await seite(pg, 'overview');
+  // Glass's drifting light: no blur filter, and it holds still while a page is built (it stalled page changes on the iPhone)
+  check(await pg.evaluate(() => document.documentElement.classList.contains('licht-ruht')), 'the drifting light rests while a page is built');
+  await pg.evaluate(() => Kit.set('glass', 'user')); await pg.waitForTimeout(300);
+  check(await pg.evaluate(() => [...document.querySelectorAll('.ambient .orb')].every(o => getComputedStyle(o).filter === 'none')), 'Glass: the drifting light has no blur filter');
+  await pg.waitForTimeout(400);
   await seite(pg, 'entry'); await pg.waitForTimeout(500);
   const vorher = (await pg.$$('#p-entry .mahlzeit .zeile')).length;
   check(vorher === fx.days['2026-10-14'].items.length, 'entry lists the day’s items');
@@ -161,6 +166,20 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
     await seite(pg, t); await pg.waitForTimeout(400);
     check(await pg.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'no sideways scrolling at 375 px on ' + t);
   }
+  // every meal tile takes a tap on its right half too (the closed page menu must not sit on top of it)
+  await seite(pg, 'entry'); await pg.waitForTimeout(400);
+  const frei = [];
+  for (const m of ['Breakfast', 'Lunch', 'Dinner', 'Snacks']){
+    const k = pg.locator('#p-entry .mahlzeit:has(h3:text-is("' + m + '"))');
+    await k.evaluate(el => el.scrollIntoView({ block: 'end' })); await pg.waitForTimeout(150);
+    const bb = await k.boundingBox();
+    frei.push(m + ':' + await pg.evaluate(bb => {                   // the whole right half, down to the bottom corner
+      const kopf = document.querySelector('.app-header').getBoundingClientRect().bottom;
+      for (let y = Math.max(bb.y, kopf) + 8; y < Math.min(bb.y + bb.height, innerHeight) - 4; y += 16) for (const fx of [.55, .7, .85, .95]){
+        const el = document.elementFromPoint(bb.x + bb.width * fx, y); if (!(el && el.closest('.mahlzeit, #seitenknopf'))) return (el ? el.tagName + '.' + el.className : 'none') + '@' + Math.round(y); }
+      return true; }, bb));
+  }
+  check(frei.every(x => x.endsWith('true')), 'meal tiles take taps on their right half, bottom corner: ' + frei.join(' '));
   check(!errs.length, 'no script errors (phone, reduced motion): ' + errs.join('; '));
   await ctx.close();
 

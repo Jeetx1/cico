@@ -355,7 +355,9 @@
 
 /* ---------------------------------------------------------------- pages: one round button at the bottom right.
    The pages open above it along the right edge (the nearest first); the veil behind them takes the tap that closes. */
-.seitenwahl{position:fixed;z-index:55;right:calc(16px + var(--sar));bottom:calc(16px + var(--sab));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+/* the box spans the hidden pages too: only the button (and the pages, once open) may take taps, never the empty box */
+.seitenwahl{position:fixed;z-index:55;right:calc(16px + var(--sar));bottom:calc(16px + var(--sab));display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none}
+.seitenwahl__knopf,.seitenwahl.offen .swahl{pointer-events:auto}
 .seitenwahl__schleier{position:fixed;inset:0;background:var(--overlay);opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease)}
 .seitenwahl.offen .seitenwahl__schleier{opacity:.6;pointer-events:auto}
 .seitenwahl__liste{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:10px;visibility:hidden;transition:visibility 0s linear .28s}

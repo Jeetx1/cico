@@ -167,6 +167,7 @@ function ringeLos(root){
 /* ================================================================ sheets: slide up on the phone, centred on a computer */
 function blatt(titel, sub, body, opt){
   opt = opt || {};
+  lichtRuht();
   const hg = h('div', { class: 'hg' });
   const zuBtn = h('button', { class: 'kreis', type: 'button', 'aria-label': 'Close', html: icon(IC.zu, 16) });
   const box = h('div', { class: 'blatt', role: 'dialog', 'aria-modal': 'true', 'aria-label': titel }, [
@@ -308,7 +309,11 @@ function baueTabs(){
   if (!$('#look')){ const lb = Kit.lookButton(); lb.id = 'look'; $('#einstellungen').parentNode.insertBefore(lb, $('#einstellungen')); }
   const o = $('#ordner'); o.hidden = !Kit.folder.can; o.onclick = ordnerDialog;
 }
+/* Glass's drifting light holds still for a moment while a page, a day or a sheet is built (see 07_effects) */
+let lichtT = 0;
+function lichtRuht(){ const r = document.documentElement; r.classList.add('licht-ruht'); clearTimeout(lichtT); lichtT = setTimeout(() => r.classList.remove('licht-ruht'), 1200); }
 function zeigeTab(id, erst){
+  lichtRuht();
   const vorher = S.tab; S.tab = id;
   const nav = $('#tabs'), i = Math.max(0, TABS.findIndex(t => t.id === id));
   $$('.swahl', nav).forEach(b => { const on = b.dataset.tab === id; b.classList.toggle('is-active', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });

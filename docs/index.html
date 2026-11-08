@@ -2,7 +2,7 @@
 <html lang="en" data-theme="ember">
 <head>
 <meta charset="utf-8">
-<meta name="build" content="2026-11-08.2">
+<meta name="build" content="2026-11-08.3">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0C0807">
 <meta name="color-scheme" content="light dark">
@@ -1263,7 +1263,9 @@ html.in-frame .tabs{bottom:22px}
 
 /* ---------------------------------------------------------------- pages: one round button at the bottom right.
    The pages open above it along the right edge (the nearest first); the veil behind them takes the tap that closes. */
-.seitenwahl{position:fixed;z-index:55;right:calc(16px + var(--sar));bottom:calc(16px + var(--sab));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+/* the box spans the hidden pages too: only the button (and the pages, once open) may take taps, never the empty box */
+.seitenwahl{position:fixed;z-index:55;right:calc(16px + var(--sar));bottom:calc(16px + var(--sab));display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none}
+.seitenwahl__knopf,.seitenwahl.offen .swahl{pointer-events:auto}
 .seitenwahl__schleier{position:fixed;inset:0;background:var(--overlay);opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease)}
 .seitenwahl.offen .seitenwahl__schleier{opacity:.6;pointer-events:auto}
 .seitenwahl__liste{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:10px;visibility:hidden;transition:visibility 0s linear .28s}
@@ -1575,6 +1577,20 @@ html.fx-daylevel .ambient{opacity:0}
 .pegel__ziel span{position:absolute;right:calc(14px + var(--sar));top:-19px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--level-line)}
 .pegel.ohneziel .pegel__ziel{opacity:0}
 @media (max-width:899px){ .pegel__ziel span{display:none} }
+
+/* ---------------------------------------------------------------- Glass: the drifting light, lighter on the phone
+   (CICO override of the kit, 8.11.2026; candidate for the Design Lab kit). On the iPhone, three screen-sized orbs under a
+   70 px blur, moving under frosted cards, made every card re-blur each frame: page changes stalled. The orbs drop the
+   filter and get the same softness from their gradients, and the light holds still while a page, a day or a sheet is
+   built (html.licht-ruht, ~1 s; invisible at a 34-48 s drift). */
+.ambient .orb{filter:none;border-radius:0}   /* the gradient fades out before the edge: nothing to clip */
+.ambient .orb.a{background:radial-gradient(circle closest-side at 43% 43%,#3570AD 0%,rgba(53,112,173,.86) 18%,rgba(53,112,173,.58) 38%,rgba(53,112,173,.29) 58%,rgba(53,112,173,.09) 78%,rgba(53,112,173,0) 100%)}
+.ambient .orb.b{background:radial-gradient(circle closest-side,#1F6E7E 0%,rgba(31,110,126,.86) 18%,rgba(31,110,126,.58) 38%,rgba(31,110,126,.29) 58%,rgba(31,110,126,.09) 78%,rgba(31,110,126,0) 100%)}
+.ambient .orb.c{background:radial-gradient(circle closest-side,#4A4FA6 0%,rgba(74,79,166,.86) 18%,rgba(74,79,166,.58) 38%,rgba(74,79,166,.29) 58%,rgba(74,79,166,.09) 78%,rgba(74,79,166,0) 100%)}
+html.licht-ruht .ambient .orb{animation-play-state:paused}
+/* under the day level the light is hidden (opacity 0) but kept moving: it rests there too */
+html.fx-daylevel .ambient{visibility:hidden}
+html.fx-daylevel .ambient .orb{animation-play-state:paused}
 
 @media (prefers-reduced-motion:reduce){
   .ringe.schluck,.ringe .welle{animation:none!important}
@@ -3408,6 +3424,7 @@ function ringeLos(root){
 /* ================================================================ sheets: slide up on the phone, centred on a computer */
 function blatt(titel, sub, body, opt){
   opt = opt || {};
+  lichtRuht();
   const hg = h('div', { class: 'hg' });
   const zuBtn = h('button', { class: 'kreis', type: 'button', 'aria-label': 'Close', html: icon(IC.zu, 16) });
   const box = h('div', { class: 'blatt', role: 'dialog', 'aria-modal': 'true', 'aria-label': titel }, [
@@ -3549,7 +3566,11 @@ function baueTabs(){
   if (!$('#look')){ const lb = Kit.lookButton(); lb.id = 'look'; $('#einstellungen').parentNode.insertBefore(lb, $('#einstellungen')); }
   const o = $('#ordner'); o.hidden = !Kit.folder.can; o.onclick = ordnerDialog;
 }
+/* Glass's drifting light holds still for a moment while a page, a day or a sheet is built (see 07_effects) */
+let lichtT = 0;
+function lichtRuht(){ const r = document.documentElement; r.classList.add('licht-ruht'); clearTimeout(lichtT); lichtT = setTimeout(() => r.classList.remove('licht-ruht'), 1200); }
 function zeigeTab(id, erst){
+  lichtRuht();
   const vorher = S.tab; S.tab = id;
   const nav = $('#tabs'), i = Math.max(0, TABS.findIndex(t => t.id === id));
   $$('.swahl', nav).forEach(b => { const on = b.dataset.tab === id; b.classList.toggle('is-active', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
@@ -3992,7 +4013,7 @@ function wischZeile(zeile, oeffnen, weg){
   };
   return box;
 }
-function geheZuTag(iso){ S.tag = iso; S.tagGewaehlt = true; periodeFolgt(iso); seiteEntry(); }
+function geheZuTag(iso){ lichtRuht(); S.tag = iso; S.tagGewaehlt = true; periodeFolgt(iso); seiteEntry(); }
 /* the Overview period follows the day: swiping into another month moves the month (and year) with it */
 function periodeFolgt(iso){
   const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7)) - 1;
@@ -4012,6 +4033,7 @@ function malTag(){ if (S.tab === 'overview') seiteOverview(); else seiteEntry();
 function tagSlide(iso, richtung, startX){
   if (slideLaeuft || !iso) return;
   const el = seiteVon(S.tab); if (!el) return;
+  lichtRuht();
   const W = Math.max(320, window.innerWidth), wechsel = () => {
     S.tag = iso; S.tagGewaehlt = true; periodeFolgt(iso);
     malTag();
