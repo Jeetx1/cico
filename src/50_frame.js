@@ -254,10 +254,54 @@ const TABS = [
   { id: 'entry', t: 'Entry', i: IC.plus },
   { id: 'foods', t: 'Foods', i: IC.korb }
 ];
+/* pages: one round button at the bottom right (phone and computer). A tap opens the three pages above it along the
+   right edge, and they stay until a page, the button or anything else is tapped. Press and slide (finger, or the held
+   mouse button): the pages open at once, the one under the pointer lights up, letting go on it opens that page. */
+function menue(auf){
+  const nav = $('#tabs'); nav.classList.toggle('offen', auf);
+  $('#seitenknopf').setAttribute('aria-expanded', auf ? 'true' : 'false');
+  $('#seitenliste').inert = !auf;
+}
+function seitenGeste(nav, knopf){
+  let aktiv = false, x0 = 0, y0 = 0, gezogen = false, warOffen = false, heiss = null;
+  const unter = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.closest ? el.closest('#seitenliste .swahl') : null; };
+  const markiere = b => { if (heiss === b) return; if (heiss) heiss.classList.remove('is-hot'); heiss = b; if (b) b.classList.add('is-hot'); };
+  knopf.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    aktiv = true; gezogen = false; warOffen = nav.classList.contains('offen'); x0 = e.clientX; y0 = e.clientY;
+    try { knopf.setPointerCapture(e.pointerId); } catch (_){}
+    if (!warOffen) menue(true);
+  });
+  knopf.addEventListener('pointermove', e => {
+    if (!aktiv) return;
+    if (!gezogen && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) gezogen = true;
+    if (gezogen) markiere(unter(e));
+  });
+  const ende = (e, abbruch) => {
+    if (!aktiv) return; aktiv = false;
+    const ziel = abbruch ? null : unter(e); markiere(null);
+    if (ziel){ menue(false); zeigeTab(ziel.dataset.tab); return; }
+    if (!gezogen){ if (warOffen) menue(false); return; }            /* a tap: opened (and stays), or closes */
+    const el = document.elementFromPoint(e.clientX, e.clientY);    /* slid off: back on the button keeps it open */
+    if (abbruch || !(el && knopf.contains(el))) menue(false);
+  };
+  knopf.addEventListener('pointerup', e => ende(e));
+  knopf.addEventListener('pointercancel', e => ende(e, true));
+  knopf.addEventListener('click', e => { if (e.detail === 0) menue(!nav.classList.contains('offen')); });   /* keyboard */
+  $('.seitenwahl__schleier', nav).addEventListener('pointerdown', e => { e.preventDefault(); menue(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('offen')){ menue(false); knopf.focus(); } });
+}
 function baueTabs(){
-  const nav = $('#tabs');
-  $$('.tab', nav).forEach(b => b.remove());
-  TABS.forEach(s => nav.appendChild(h('button', { type: 'button', class: 'tab', 'data-tab': s.id, html: icon(s.i, 20) + '<span>' + s.t + '</span>', onclick: () => zeigeTab(s.id) })));
+  const nav = $('#tabs'), liste = $('#seitenliste'), knopf = $('#seitenknopf');
+  liste.innerHTML = '';
+  TABS.forEach((s, i) => {
+    const b = h('button', { type: 'button', class: 'swahl', 'data-tab': s.id, html: '<span>' + s.t + '</span><i>' + icon(s.i, 21) + '</i>', onclick: () => { menue(false); zeigeTab(s.id); } });
+    b.style.setProperty('--j', TABS.length - 1 - i);               /* the one nearest the button comes first */
+    liste.appendChild(b);
+  });
+  if (!nav._an){ nav._an = true; seitenGeste(nav, knopf); }
+  menue(false);
   $('#sichern').onclick = () => speichern();
   $('#einstellungen').onclick = () => zieleDialog();
   /* the look: one button in the top row, next to the settings */
@@ -267,8 +311,10 @@ function baueTabs(){
 function zeigeTab(id, erst){
   const vorher = S.tab; S.tab = id;
   const nav = $('#tabs'), i = Math.max(0, TABS.findIndex(t => t.id === id));
-  nav.style.setProperty('--i', i);
-  $$('.tab', nav).forEach(b => { const on = b.dataset.tab === id; b.classList.toggle('is-active', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  $$('.swahl', nav).forEach(b => { const on = b.dataset.tab === id; b.classList.toggle('is-active', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  /* the button shows the page you are on; open, it turns into a cross */
+  $('#seitenknopf').innerHTML = '<span class="jetzt">' + icon(TABS[i].i, 24) + '</span><span class="zu">' + icon(IC.zu, 22) + '</span>';
+  $('#seitenknopf').setAttribute('aria-label', 'Pages, now ' + TABS[i].t);
   $$('.seite').forEach(s => s.classList.toggle('on', s.id === 'p-' + id));
   if (!erst && vorher !== id) nav.dispatchEvent(new CustomEvent('dl:tab', { detail: i }));
   malSeite();

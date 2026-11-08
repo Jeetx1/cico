@@ -107,7 +107,7 @@
 .legende i.gw::after{content:'';position:absolute;left:4px;top:-4px;width:6px;height:6px;border-radius:50%;background:var(--weight)}
 .diagramm .gwlinie{fill:none;stroke:var(--weight);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;animation:gwAuf .6s var(--ease) .45s both}
 .diagramm .gwpunkt{fill:var(--weight);stroke:var(--surface);stroke-width:1.2;animation:gwAuf .6s var(--ease) .45s both}
-.diagramm .gwachse{fill:var(--weight);font-weight:600;paint-order:stroke;stroke:var(--surface-raised,var(--bg));stroke-width:3px;stroke-linejoin:round}
+.diagramm .gwachse{fill:var(--weight-label);font-weight:600;paint-order:stroke;stroke:var(--weight-halo);stroke-width:3.5px;stroke-linejoin:round}
 @keyframes gwAuf{from{opacity:0}}
 
 /* the macro split reveals left to right (transform only) */
@@ -353,6 +353,31 @@
 .plus{position:fixed;z-index:85;pointer-events:none;font-family:var(--font-num);font-weight:800;font-size:26px;color:var(--bite-text);text-shadow:0 4px 18px var(--bite-glow);animation:plus 1.3s var(--ease) forwards}
 @keyframes plus{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.06)}100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
 
+/* ---------------------------------------------------------------- pages: one round button at the bottom right.
+   The pages open above it along the right edge (the nearest first); the veil behind them takes the tap that closes. */
+.seitenwahl{position:fixed;z-index:55;right:calc(16px + var(--sar));bottom:calc(16px + var(--sab));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.seitenwahl__schleier{position:fixed;inset:0;background:var(--overlay);opacity:0;pointer-events:none;transition:opacity var(--dur) var(--ease)}
+.seitenwahl.offen .seitenwahl__schleier{opacity:.6;pointer-events:auto}
+.seitenwahl__liste{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:10px;visibility:hidden;transition:visibility 0s linear .28s}
+.seitenwahl.offen .seitenwahl__liste{visibility:visible;transition-delay:0s}
+.swahl{display:flex;align-items:center;gap:12px;height:54px;padding:0 3px 0 20px;border-radius:999px;font-size:15px;font-weight:600;color:var(--text);
+  background:var(--tabbar-bg);box-shadow:var(--tabbar-shadow);-webkit-backdrop-filter:var(--backdrop);backdrop-filter:var(--backdrop);
+  opacity:0;transform:translateY(calc(18px + var(--j) * 14px)) scale(.86);transform-origin:right center;
+  transition:opacity .16s var(--ease),transform .3s var(--ease-spring),box-shadow var(--dur-fast);transition-delay:calc(var(--j) * 35ms)}
+.seitenwahl.offen .swahl{opacity:1;transform:none}
+.swahl i{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;flex:none;color:var(--text-2);background:var(--neutral-soft)}
+.swahl.is-active i{background:var(--tabbar-active-bg);color:var(--tabbar-active-text);box-shadow:var(--tabbar-active-shadow)}
+.seitenwahl.offen .swahl.is-hot,.seitenwahl.offen .swahl:hover{transform:scale(1.06);box-shadow:0 0 0 2px var(--accent),var(--tabbar-shadow);transition-delay:0s}
+.seitenwahl__knopf{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;color:var(--tabbar-active-text);background:var(--tabbar-active-bg);
+  box-shadow:var(--tabbar-active-shadow),var(--tabbar-shadow);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  transition:transform var(--dur) var(--ease-spring)}
+.seitenwahl__knopf:active{transform:scale(var(--press))}
+.seitenwahl__knopf span{grid-area:1/1;display:grid;transition:opacity .18s var(--ease),transform .3s var(--ease-spring)}
+.seitenwahl__knopf .zu,.seitenwahl.offen .seitenwahl__knopf .jetzt{opacity:0;transform:rotate(-90deg) scale(.6)}
+.seitenwahl.offen .seitenwahl__knopf .zu{opacity:1;transform:none}
+@media (min-width:900px){ .seitenwahl{right:calc(28px + var(--sar));bottom:28px} }
+@media (prefers-reduced-motion:reduce){ .swahl,.seitenwahl__knopf span{transform:none!important;transition-property:opacity!important} }
+
 /* toasts never catch a tap (the tile under one stays usable), and on the phone they sit at the top, under the
    header, away from the entry just logged */
 .toasts,.toast{pointer-events:none}
@@ -375,7 +400,7 @@
 /* ---------------------------------------------------------------- layout bits the components leave to the tool */
 @media (min-width:900px){
   .raster > .s5{grid-column:span 5} .raster > .s7{grid-column:span 7}
-  main.wrap{padding-bottom:56px}
+  main.wrap{padding-bottom:112px}   /* room for the page button */
 }
 .spinner{width:30px;height:30px;border-radius:50%;border:2.5px solid var(--neutral-soft);border-top-color:var(--accent);animation:spin .8s linear infinite}
 @media (prefers-reduced-motion:reduce){ .spinner{animation:fadePulse 1.4s ease-in-out infinite} }

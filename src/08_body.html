@@ -31,7 +31,6 @@
         <div class="app-icon" data-icon></div>
         <div class="app-title"><b>CICO</b><small id="dateiname"></small></div>
       </div>
-      <nav class="tabs" id="tabs" aria-label="Pages" style="--n:3"><span class="tabs__indicator"><i></i></span></nav>
       <div class="header-actions">
         <button type="button" class="btn btn--ghost btn--sm only-desktop" id="ordner" hidden title="App folder and backup folder: today's file goes into the app folder, the one it replaces into the backup folder">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="btn__label">Save to folder</span></button>
@@ -47,6 +46,12 @@
     <section class="seite" id="p-entry" aria-label="Entry"></section>
     <section class="seite" id="p-foods" aria-label="Foods"></section>
   </main>
+  <!-- pages: one round button at the bottom right, the pages open above it along the right edge -->
+  <nav class="seitenwahl" id="tabs" aria-label="Pages">
+    <div class="seitenwahl__schleier"></div>
+    <div class="seitenwahl__liste" id="seitenliste"></div>
+    <button type="button" class="seitenwahl__knopf" id="seitenknopf" aria-expanded="false" aria-controls="seitenliste" aria-label="Pages"></button>
+  </nav>
 </div>
 
 <div id="dlgroot"></div>

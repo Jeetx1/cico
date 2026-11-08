@@ -34,6 +34,8 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
     await pg.goto(URL); await pg.waitForTimeout(250);
     return { ctx, pg, errs };
   }
+  // pages: tap the round button, then the page (the menu stays open after a tap)
+  const seite = async (pg, t) => { await pg.click('#seitenknopf'); await pg.waitForTimeout(350); await pg.click('#tabs button[data-tab=' + t + ']'); };
   const oeffne = async (pg, f) => { await pg.click('#wahl button:has-text("Open your data file")'); await pg.setInputFiles('#dateiwahl', f); await pg.waitForTimeout(1600); };
   const speichere = async pg => {
     const [d] = await Promise.all([pg.waitForEvent('download'), pg.click('#sichern')]);
@@ -56,7 +58,7 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   check(Math.abs(zt.maintain.protein * 4 + zt.maintain.carbs * 4 + zt.maintain.fat * 9 - 2600) < 1.5 && zt.maintain.protein === 160, 'stored target: grams add up to 2600 kcal, protein kept');
   check((await pg.innerText('#p-overview')).includes('kcal left') && (await pg.innerText('#p-overview')).includes(tsd(2600)), 'overview shows the new target');
   check((await pg.getAttribute('#sichern', 'class')).includes('is-dirty'), 'Save blinks after changes');
-  await pg.click('#tabs button[data-tab=foods]'); await pg.waitForTimeout(300);
+  await seite(pg, 'foods'); await pg.waitForTimeout(300);
   await pg.click('#p-foods button:has-text("Add by hand")'); await pg.waitForTimeout(400);
   const f = '.blatt';
   await pg.fill(f + ' .feld:has-text("Name") input', 'Test oats');
@@ -95,7 +97,20 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   await pg.click('.segmented button:has-text("YTD")'); await pg.waitForTimeout(500);
   txt = await pg.innerText('#p-overview');
   check(txt.includes('Energy per week') && txt.includes('January to October 2026'), 'YTD shows the weekly chart');
-  await pg.click('#tabs button[data-tab=entry]'); await pg.waitForTimeout(500);
+  // the page button: a tap opens the menu and it stays; a tap on the veil closes it; press, slide, let go on a page opens it
+  await pg.click('#seitenknopf'); await pg.waitForTimeout(400);
+  check(await pg.isVisible('#tabs button[data-tab=foods]') && (await pg.getAttribute('#seitenknopf', 'aria-expanded')) === 'true', 'a tap on the page button opens the pages and they stay');
+  await pg.mouse.click(300, 300); await pg.waitForTimeout(400);
+  check((await pg.getAttribute('#seitenknopf', 'aria-expanded')) === 'false' && await pg.isVisible('#p-overview'), 'a tap elsewhere closes them, the page stays');
+  const kb = await pg.locator('#seitenknopf').boundingBox();
+  await pg.mouse.move(kb.x + kb.width / 2, kb.y + kb.height / 2); await pg.mouse.down(); await pg.waitForTimeout(350);
+  const fb = await pg.locator('#tabs button[data-tab=foods]').boundingBox();
+  await pg.mouse.move(fb.x + fb.width / 2, fb.y + fb.height / 2, { steps: 8 }); await pg.waitForTimeout(100);
+  const heiss = await pg.getAttribute('#tabs button[data-tab=foods]', 'class');
+  await pg.mouse.up(); await pg.waitForTimeout(500);
+  check(heiss.includes('is-hot') && await pg.isVisible('#p-foods') && (await pg.getAttribute('#seitenknopf', 'aria-expanded')) === 'false', 'press and slide to Foods, let go: Foods opens and the menu closes');
+  await seite(pg, 'overview'); await pg.waitForTimeout(400);
+  await seite(pg, 'entry'); await pg.waitForTimeout(500);
   const vorher = (await pg.$$('#p-entry .mahlzeit .zeile')).length;
   check(vorher === fx.days['2026-10-14'].items.length, 'entry lists the day’s items');
   await pg.click('#p-entry .chip:has-text("Banana")'); await pg.waitForTimeout(500);
@@ -133,7 +148,7 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   // ---------------------------------------------------------------- round trip: the saved file opens again, with its look
   ({ ctx, pg, errs } = await neu());
   await oeffne(pg, saved.file);
-  await pg.click('#tabs button[data-tab=entry]'); await pg.waitForTimeout(500);
+  await seite(pg, 'entry'); await pg.waitForTimeout(500);
   check((await pg.$$('#p-entry .mahlzeit .zeile')).length === vorher + 1, 'reopened file shows the logged item');
   check(await pg.evaluate(() => document.documentElement.dataset.theme) === 'prism', 'opening a file applies its look');
   check(!(await pg.getAttribute('#sichern', 'class')).includes('is-dirty'), 'opening does not count as a change');
@@ -143,7 +158,7 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   ({ ctx, pg, errs } = await neu({ viewport: { width: 375, height: 800 }, mobile: true, reduced: true }));
   await oeffne(pg, FIX);
   for (const t of ['overview', 'entry', 'foods']){
-    await pg.click('#tabs button[data-tab=' + t + ']'); await pg.waitForTimeout(400);
+    await seite(pg, t); await pg.waitForTimeout(400);
     check(await pg.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'no sideways scrolling at 375 px on ' + t);
   }
   check(!errs.length, 'no script errors (phone, reduced motion): ' + errs.join('; '));

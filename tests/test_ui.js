@@ -78,7 +78,9 @@ function sample(){
     await p.screenshot({ path: OUT + '/' + theme + '-phone-look.png' });
     await p.keyboard.press('Escape');
     // entry
-    await p.click('.tab[data-tab="entry"]'); await p.waitForTimeout(1200);
+    await p.tap('#seitenknopf'); await p.waitForTimeout(500);
+    await p.screenshot({ path: OUT + '/' + theme + '-phone-pages.png' });
+    await p.tap('.swahl[data-tab="entry"]'); await p.waitForTimeout(1200);
     await p.screenshot({ path: OUT + '/' + theme + '-phone-entry.png' });
     await swipe(320, 60);
     const t2 = await p.evaluate(() => document.querySelector('.tagleiste h2') && document.querySelector('.tagleiste h2').firstChild.textContent);
