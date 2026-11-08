@@ -29,9 +29,18 @@ while d <= datetime.date(2026, 10, 14):
     d += datetime.timedelta(days=1)
 days['2026-09-20']['phase'] = 'surplus'
 days['2026-09-20']['items'].append(dict(id='xs1', food=None, name='Birthday cake', brand='', g=450, meal='Snacks', k=410, p=5, c=48, f=21, at='2026-09-20T16:00:00Z'))
+# bodyweight on most mornings, drifting down in the shred phase (own random stream: the days above stay as they were)
+rw = random.Random(7)
+weights, kg, d = {}, 81.0, datetime.date(2026, 9, 1)
+while d <= datetime.date(2026, 10, 14):
+    kg += (-.08 if d >= datetime.date(2026, 10, 5) else .01) + rw.uniform(-.25, .25)
+    if rw.random() < .75:
+        weights[d.isoformat()] = round(kg, 1)
+    d += datetime.timedelta(days=1)
+weights['2026-10-14'] = 79.6
 data = dict(app='calorie-tracker', v=1, saved='2026-10-14T08:00:00Z',
   config=dict(name='Test Person', targets=dict(maintain=dict(kcal=2600, protein=160, carbs=None, fat=None), shred=dict(kcal=2250, protein=170, carbs=None, fat=None), surplus=dict(kcal=4600, protein=160, carbs=None, fat=None)),
               phaseFrom=[dict(**{'from': '2026-09-01', 'phase': 'maintain'}), dict(**{'from': '2026-10-05', 'phase': 'shred'})]),
-  foods=foods, days=days, futureField={'kept': True})
+  foods=foods, days=days, weights=weights, futureField={'kept': True})
 json.dump(data, open('tests/fixture.json', 'w'), indent=1)
 print(len(days), 'days')

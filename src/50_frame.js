@@ -6,8 +6,10 @@ function toast(msg, fehler, sub){
   box.appendChild(t);
   while (box.children.length > 3) box.firstChild.remove();
   let weg = false;
-  const geh = () => { if (weg) return; weg = true; t.classList.add('is-leaving'); setTimeout(() => t.remove(), 260); };
-  setTimeout(geh, fehler ? 5200 : 3200);
+  const geh = () => { if (weg) return; weg = true; document.removeEventListener('pointerdown', geh, true); t.classList.add('is-leaving'); setTimeout(() => t.remove(), 260); };
+  setTimeout(geh, fehler ? 5200 : 2600);
+  /* taps go through it (CSS); the next tap anywhere also sends it away */
+  setTimeout(() => { if (!weg) document.addEventListener('pointerdown', geh, true); }, 0);
 }
 
 /* ================================================================ emblem and background: the guilloché of the house icons */
@@ -54,8 +56,14 @@ function kpiLinien(a){
     w.nT = x.nT; w.nZ = x.nZ;
   });
   const geloggt = bisher.filter(t => t.geloggt), mitN = wo.filter(w => w.n);
-  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ) }
-             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ) };
+  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ), kg: gewichtWochen(a.gewichte).map(w => w.kg) }
+             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ), kg: a.gewichte.map(x => x.kg) };
+}
+/* weigh-ins as weekly averages (YTD): [{ mo, kg }] */
+function gewichtWochen(liste){
+  const w = [];
+  liste.forEach(x => { const mo = ISO(monday(P(x.iso))); let y = w[w.length - 1]; if (!y || y.mo !== mo){ y = { mo, s: 0, n: 0 }; w.push(y); } y.s += x.kg; y.n++; });
+  return w.map(y => ({ mo: y.mo, kg: y.s / y.n }));
 }
 function kpiGlatt(pts){
   let d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);

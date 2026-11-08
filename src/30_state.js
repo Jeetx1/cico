@@ -40,6 +40,10 @@ function agg(sc){
   r.schnittKcal = r.geloggt ? r.kcal / r.geloggt : 0;
   r.schnittP = r.geloggt ? r.p / r.geloggt : 0;
   r.schnittDiff = r.mitZiel ? r.diffSumme / r.mitZiel : null;
+  /* bodyweight: the weigh-ins of the period so far, and the last one before it (where the shift starts from) */
+  r.gewichte = gewichteIn(sc.von, sc.bis < TODAY ? sc.bis : TODAY);
+  r.gewichtVorher = gewichtVor(sc.von);
+  r.schnittKg = r.gewichte.length ? r.gewichte.reduce((s, x) => s + x.kg, 0) / r.gewichte.length : null;
   return r;
 }
 /* weeks for the YTD chart: average per logged day and the average target */

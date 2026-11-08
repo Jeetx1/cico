@@ -2,7 +2,7 @@
 // node tests/test_ui.js [docs/index.html] [shots dir]
 const { chromium } = (() => { try { return require('playwright'); } catch (e){ return require('/opt/npm-tools/node_modules/playwright'); } })();
 const fs = require('fs');
-const FILE = 'file://' + require('path').resolve(process.argv[2] || require('path').join(__dirname, '../docs/index.html'));
+const FILE = require('url').pathToFileURL(require('path').resolve(process.argv[2] || require('path').join(__dirname, '../docs/index.html'))).href;
 const OUT = process.argv[3] || require('path').join(__dirname, 'shots', 'ui');
 fs.mkdirSync(OUT, { recursive: true });
 

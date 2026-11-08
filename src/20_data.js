@@ -2,7 +2,9 @@
    { app, v, saved,
      config: { name, targets: { maintain|shred|surplus: { kcal, protein, carbs, fat } }, phaseFrom: [{ from, phase }] },
      foods:  { id: { name, brand, barcode, unit, k, p, c, f (all per 100 g/ml), portion: { name, g } | null, fav, made, created, updated } },
-     days:   { 'YYYY-MM-DD': { phase?, items: [{ id, food, name, brand, g, meal, k, p, c, f, at }] } } }
+     days:   { 'YYYY-MM-DD': { phase?, items: [{ id, food, name, brand, g, meal, k, p, c, f, at }] } },
+     weights: { 'YYYY-MM-DD': kg } }
+   Bodyweight sits apart from the days: an older build keeps it as an unknown field (it drops days without items).
    Each logged item keeps its own copy of the values per 100, so a later edit of the food never changes the past
    by accident (the food dialog asks whether to update logged entries).                                          */
 const APP = 'calorie-tracker', VERSION = 1;
@@ -24,7 +26,7 @@ let DATA = null;
 function leer(){
   return { app: APP, v: VERSION, saved: null,
     config: { name: '', targets: { maintain: ziel0(), shred: ziel0(), surplus: ziel0() }, phaseFrom: [] },
-    foods: {}, days: {} };
+    foods: {}, days: {}, weights: {} };
 }
 function ziel0(){ return { kcal: null, protein: null, carbs: null, fat: null, split: null }; }
 /* The macro targets are a split of the kcal target in percent, so they always add up to it:
@@ -91,6 +93,9 @@ function normalize(o){
     if (t0.items.length || t0.phase) days[iso] = t0;
   }
   d.days = days;
+  const weights = {};
+  for (const iso in (o.weights || {})){ const kg = num(o.weights[iso], 20, 400); if (/^\d{4}-\d{2}-\d{2}$/.test(iso) && kg) weights[iso] = Math.round(kg * 10) / 10; }
+  d.weights = weights;
   return d;
 }
 
@@ -112,6 +117,13 @@ function phaseVon(iso){
 }
 function zielVon(iso){ return DATA.config.targets[phaseVon(iso)] || ziel0(); }
 function zielGesetzt(){ return PHASES.some(p => DATA.config.targets[p.id].kcal); }
+
+/* ---------- bodyweight: one figure per day, in kg */
+function gewicht(iso){ const kg = DATA.weights[iso]; return typeof kg === 'number' ? kg : null; }
+function gewichteIn(von, bis){ return Object.keys(DATA.weights).filter(i => i >= von && i <= bis).sort().map(iso => ({ iso, kg: DATA.weights[iso] })); }
+/* the last weigh-in before a day */
+function gewichtVor(iso){ const v = Object.keys(DATA.weights).filter(i => i < iso).sort().pop(); return v ? { iso: v, kg: DATA.weights[v] } : null; }
+const kg1 = x => (Math.round(x * 10) / 10).toFixed(1);
 
 /* ---------- foods */
 function foodListe(){ return Object.keys(DATA.foods).map(id => Object.assign({ id }, DATA.foods[id])); }

@@ -65,7 +65,7 @@ function seiteOverview(){
       makroZeile('Protein', 'var(--prot)', r.s.p, r.z.protein, 'g'),
       makroZeile('Carbs', 'var(--carb)', r.s.c, r.z.carbs, 'g'),
       makroZeile('Fat', 'var(--fett)', r.s.f, r.z.fat, 'g'),
-      h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(tg, seiteOverview) }, [h('i'), PHASE[ph].name])
+      h('div', { class: 'pillen' }, [h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(tg, seiteOverview) }, [h('i'), PHASE[ph].name]), gewichtKnopf(tg, seiteOverview)])
     ])
   ]);
   raster.appendChild(heute);
@@ -74,7 +74,7 @@ function seiteOverview(){
   const zielTxt = a.schnittDiff === null ? (zielGesetzt() ? 'No target on these days' : 'Set a target to compare') :
     (Math.abs(a.schnittDiff) < 1 ? 'Right on target' : tsd(Math.abs(a.schnittDiff)) + ' kcal ' + (a.schnittDiff > 0 ? 'above' : 'below') + ' target');
   /* KPI tiles: value, sparkline (travelling light), delta against the previous period */
-  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.imZiel, a.mitZiel].join('|');
+  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.gewichte.map(x => x.iso + x.kg).join(',')].join('|');
   const kpiRuhig = RUHIG || kpiSchluessel === KPI_ZULETZT; KPI_ZULETZT = kpiSchluessel;
   const vp = vorperiode(), av = vp.a, linien = kpiLinien(a), sparks = [];
   const kachel = (k, wert, einheit, f, fmt, x) => {
@@ -94,6 +94,14 @@ function seiteOverview(){
   const dZahl = (d, einheit, besser, titel) => (d === null || !isFinite(d) || Math.round(d) === 0) ? null :
     { txt: (d > 0 ? '+' : '\u2212') + tsd(Math.abs(d)) + (einheit ? ' ' + einheit : '') + ' ' + vs, gut: besser === 0 ? false : (d > 0) === (besser > 0), titel: titel + ' ' + vs };
   const tageText = S.modus === 'ytd' ? 'days' : 'days';
+  /* bodyweight: the last weigh-in of the period, the shift since the last one before it (or the period's first);
+     the delta compares the average weight with the period before. Lower counts as better only in a mostly-shred period. */
+  const gw = a.gewichte, gwLetzt = gw.length ? gw[gw.length - 1] : null, gwBasis = a.gewichtVorher || (gw.length > 1 ? gw[0] : null);
+  const gwText = !gwLetzt ? 'Weigh in on Entry' : !gwBasis ? 'Weighed on ' + tagKurz(gwLetzt.iso)
+    : (Math.abs(gwLetzt.kg - gwBasis.kg) < .05 ? 'Unchanged' : (gwLetzt.kg > gwBasis.kg ? '+' : '−') + kg1(Math.abs(gwLetzt.kg - gwBasis.kg)) + ' kg') + ' since ' + tagKurz(gwBasis.iso);
+  const gwBesser = a.phasen.shred > a.phasen.maintain + a.phasen.surplus ? -1 : 0, gwD = a.schnittKg !== null && av.schnittKg !== null ? a.schnittKg - av.schnittKg : null;
+  const gwDelta = gwD === null || Math.abs(gwD) < .05 ? null :
+    { txt: (gwD > 0 ? '+' : '−') + kg1(Math.abs(gwD)) + ' kg ' + vs, gut: gwBesser !== 0 && (gwD > 0) === (gwBesser > 0), titel: 'Average bodyweight ' + vs };
   raster.appendChild(h('div', { class: 'kacheln s7' }, [
     kachel('Average per day', a.geloggt ? a.schnittKcal : null, 'kcal', a.geloggt ? zielTxt : 'Nothing logged yet', null,
       { linie: linien.kcal, farbe: 'var(--energy)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittKcal - av.schnittKcal, 'kcal', 0, 'Average kcal per logged day') : null }),
@@ -101,8 +109,7 @@ function seiteOverview(){
       { linie: linien.p, farbe: 'var(--prot)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittP - av.schnittP, 'g', 1, 'Average protein per logged day') : null }),
     kachel('Days logged', a.geloggt, 'of ' + a.kalender, a.kalender ? Math.round(a.geloggt / a.kalender * 100) + ' % of the ' + tageText + ' so far' : 'The period has not started', null,
       { linie: linien.tage, delta: a.kalender && av.kalender && av.geloggt ? dZahl((a.geloggt / a.kalender - av.geloggt / av.kalender) * 100, 'pts', 1, 'Share of days logged, in percentage points,') : null }),
-    kachel('On target', a.mitZiel ? a.imZiel : null, a.mitZiel ? 'days' : '', a.mitZiel ? 'Within 10 % of that day\u2019s target' : 'Needs a kcal target', null,
-      { linie: linien.ziel, farbe: 'var(--success)', delta: a.mitZiel && av.mitZiel ? dZahl((a.imZiel / a.mitZiel - av.imZiel / av.mitZiel) * 100, 'pts', 1, 'Share of days on target, in percentage points,') : null })
+    kachel('Bodyweight', gwLetzt ? gwLetzt.kg : null, gwLetzt ? 'kg' : '', gwText, kg1, { linie: linien.kg, farbe: 'var(--weight)', delta: gwDelta })
   ]));
   /* the lines are drawn once the tiles are on the page (they need their width) */
   requestAnimationFrame(() => sparks.forEach(([sv, d], i) => { if (sv.isConnected) kpiSpark(sv, d, !kpiRuhig && BEWEGUNG, 220 + i * 140); }));
@@ -154,7 +161,7 @@ function diagrammKarte(a, sc){
   const punkte = ytd ? wochen(a.tage).map(w => ({ label: w.mo, wert: w.wert, ziel: w.ziel, zukunft: w.zukunft, leer: !w.n, heute: w.mo === ISO(monday(P(S.tag))) }))
                      : a.tage.map(t => ({ label: t.iso, wert: t.s.kcal, ziel: t.z.kcal, zukunft: t.zukunft, leer: !t.geloggt, heute: t.iso === S.tag }));
   const karte = h('div', { class: 'glas card karte' }, [h('div', { class: 'kkopf' }, [
-    h('div', {}, [h('h3', {}, [ytd ? 'Energy per week' : 'Energy per day']), h('p', { class: 'unter' }, [ytd ? 'Average kcal per logged day in each week' : 'kcal eaten each day'])])
+    h('div', {}, [h('h3', {}, [ytd ? 'Energy per week' : 'Energy per day']), h('p', { class: 'unter' }, [(ytd ? 'Average kcal per logged day in each week' : 'kcal eaten each day') + (a.gewichte.length ? ', and your bodyweight' : '')])])
   ])]);
   if (!a.geloggt){
     karte.appendChild(h('div', { class: 'leer-hinweis' }, [h('b', {}, ['Nothing logged in ' + (ytd ? S.jahr : MONTHS[S.monat]) + ' yet']), 'Scan or pick a food on Entry and it appears here.',
@@ -193,6 +200,21 @@ function diagrammKarte(a, sc){
     pfad += (an ? 'L' + x0.toFixed(1) + ',' + yy : 'M' + x0.toFixed(1) + ',' + yy) + 'L' + x1.toFixed(1) + ',' + yy; an = true;
   });
   if (pfad) s += '<path class="ziellinie" d="' + pfad + '"/>';
+  /* bodyweight on its own scale (labels on the left): a line through the weigh-ins, bridging days without one.
+     YTD: the weekly average. At least 2 kg of range, so a few hundred grams do not look like a landslide. */
+  const gwPunkte = [];
+  if (ytd){ const wk = {}; gewichtWochen(a.gewichte).forEach(w => { wk[w.mo] = w.kg; }); punkte.forEach((p, i) => { if (wk[p.label] !== undefined) gwPunkte.push({ i, kg: wk[p.label], label: p.label }); }); }
+  else { punkte.forEach((p, i) => { const kg = p.zukunft ? null : gewicht(p.label); if (kg !== null) gwPunkte.push({ i, kg, label: p.label }); }); }
+  if (gwPunkte.length){
+    let lo = Math.min(...gwPunkte.map(p => p.kg)), hi = Math.max(...gwPunkte.map(p => p.kg));
+    if (hi - lo < 2){ const m = (hi + lo) / 2; lo = m - 1; hi = m + 1; }
+    const rand = (hi - lo) * .12; lo -= rand; hi += rand;
+    const yk = v => oben + 10 + (H - unten - oben - 20) * (1 - (v - lo) / (hi - lo)), xk = i => i * sp + sp / 2;
+    const st = hi - lo > 12 ? 5 : (hi - lo > 5 ? 2 : 1);
+    for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) s += '<text class="achse gwachse" x="0" y="' + (yk(v) + 3.5).toFixed(1) + '" text-anchor="start">' + v + ' kg</text>';
+    if (gwPunkte.length > 1) s += '<path class="gwlinie" vector-effect="non-scaling-stroke" d="' + gwPunkte.map((p, j) => (j ? 'L' : 'M') + xk(p.i).toFixed(1) + ',' + yk(p.kg).toFixed(1)).join('') + '"/>';
+    gwPunkte.forEach(p => { s += '<circle class="gwpunkt" cx="' + xk(p.i).toFixed(1) + '" cy="' + yk(p.kg).toFixed(1) + '" r="3.2"><title>' + (ytd ? 'Week of ' + tagKurz(p.label) + ': ' + kg1(p.kg) + ' kg on average' : tagLang(p.label) + ': ' + kg1(p.kg) + ' kg') + '</title></circle>'; });
+  }
   const box = h('div', { class: 'diagramm' });
   box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' + (ytd ? 'Average kcal per week' : 'kcal per day') + '">' + s + '</svg>';
   /* text must not stretch with the bars: counter-scale it */
@@ -202,11 +224,13 @@ function diagrammKarte(a, sc){
     if (!bw2) return;
     const fx = W / bw2;
     $$('text', svgEl).forEach(t => { const x = Number(t.getAttribute('x')); t.setAttribute('transform', 'translate(' + x + ' 0) scale(' + fx.toFixed(3) + ' 1) translate(' + (-x) + ' 0)'); });
+    $$('circle', svgEl).forEach(c => { const x = Number(c.getAttribute('cx')); c.setAttribute('transform', 'translate(' + x + ' 0) scale(' + fx.toFixed(3) + ' 1) translate(' + (-x) + ' 0)'); });
   });
   karte.appendChild(box);
   karte.appendChild(h('div', { class: 'legende' }, [
     h('span', {}, [h('i', { style: { background: 'linear-gradient(var(--bar-1),var(--bar-2))' } }), ytd ? 'Average per logged day' : 'Eaten']),
     pfad ? h('span', {}, [h('i', { class: 'strich' }), 'Target of the day\u2019s phase']) : null,
+    gwPunkte.length ? h('span', {}, [h('i', { class: 'gw' }), ytd ? 'Bodyweight, weekly average' : 'Bodyweight']) : null,
     h('span', {}, [h('i', { style: { background: 'linear-gradient(var(--bar-today-1),var(--bar-today-2))' } }), ytd ? (S.tag === TODAY ? 'This week' : 'Week of ' + tagKurz(S.tag)) : (S.tag === TODAY ? 'Today' : tagKurz(S.tag))])
   ]));
   return karte;

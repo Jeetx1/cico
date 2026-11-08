@@ -78,7 +78,7 @@ async function ablegen(blob, name){
   setTimeout(() => { URL.revokeObjectURL(u); a.remove(); }, 800);
   return { ok: true, name, download: true };
 }
-const zaehl = d => Object.keys(d.foods).length + '/' + Object.keys(d.days).length + '/' + Object.values(d.days).reduce((s, t) => s + t.items.length, 0);
+const zaehl = d => Object.keys(d.foods).length + '/' + Object.keys(d.days).length + '/' + Object.values(d.days).reduce((s, t) => s + t.items.length, 0) + '/' + Object.keys(d.weights || {}).length;
 function inhalt(){
   DATA.settings = Object.assign({}, DATA.settings, { theme: Kit.theme() });
   DATA.saved = new Date().toISOString();

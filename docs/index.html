@@ -2,7 +2,7 @@
 <html lang="en" data-theme="ember">
 <head>
 <meta charset="utf-8">
-<meta name="build" content="2026-10-25.3">
+<meta name="build" content="2026-11-08.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0C0807">
 <meta name="color-scheme" content="light dark">
@@ -348,7 +348,7 @@
   --ring-e1:#3F74B0; --ring-e2:#B5D5F5; --ring-p1:#4FA594; --ring-p2:#A6E6D8; --ring-track:rgba(255,255,255,.08); --ring-lap:#E6F1FC;
   --over-1:#99BEE8; --over-2:#C99A4E; --over-3:#BF6259;
   --bar-1:#A9CDF3; --bar-2:#3F74B0; --bar-today-1:#F1F7FD; --bar-today-2:#7DB1E6; --bar-target:#C9DDF5; --bar-empty:rgba(255,255,255,.18);
-  --phase-maintain:#7DB1E6; --phase-shred:#A6E6D8; --phase-surplus:#E6F1FC;
+  --phase-maintain:#7DB1E6; --phase-shred:#A6E6D8; --phase-surplus:#E6F1FC; --weight:#F2C98A;
   --scan-bg:linear-gradient(180deg,#DCEBFA,#A9CDF3); --scan-text:#08131E; --scan-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 10px 26px -14px rgba(125,177,230,.75);
   --swipe-bg:linear-gradient(180deg,#C2625A,#A9504A); --swipe-text:#FFF4F2;
   --bite-core:#FFFFFF; --bite-glow:rgba(169,205,243,.9); --bite-text:#E6F1FC;
@@ -361,7 +361,7 @@
   --ring-e1:#E8401A; --ring-e2:#FFB347; --ring-p1:#E89A10; --ring-p2:#FFE3A8; --ring-track:rgba(255,190,160,.08); --ring-lap:#FFE9D6;
   --over-1:#FFD08A; --over-2:#FF8A3D; --over-3:#E0301E;
   --bar-1:#FF9A4D; --bar-2:#C8301A; --bar-today-1:#FFE3B0; --bar-today-2:#FFB020; --bar-target:#FFC24A; --bar-empty:rgba(255,190,160,.2);
-  --phase-maintain:#FF6A2B; --phase-shred:#FFC24A; --phase-surplus:#FFE3CC;
+  --phase-maintain:#FF6A2B; --phase-shred:#FFC24A; --phase-surplus:#FFE3CC; --weight:#8FD6F5;
   --scan-bg:linear-gradient(180deg,#FF8E40,#E8401A); --scan-text:#1E0A03; --scan-shadow:inset 0 1px 0 rgba(255,225,190,.5),0 10px 26px -12px rgba(255,90,31,.7);
   --swipe-bg:linear-gradient(180deg,#EE3F26,#BF2414); --swipe-text:#FFF3EF;
   --bite-core:#FFF3D6; --bite-glow:rgba(255,140,50,.95); --bite-text:#FFE3B0;
@@ -374,7 +374,7 @@
   --ring-e1:#5B48F5; --ring-e2:#16B2E3; --ring-p1:#0FA37F; --ring-p2:#6EE0BE; --ring-track:rgba(20,22,40,.07); --ring-lap:#C9C2FF;
   --over-1:#9AA6FF; --over-2:#F2A100; --over-3:#DC2B55;
   --bar-1:#8F82FF; --bar-2:#5B48F5; --bar-today-1:#7FDCF5; --bar-today-2:#16B2E3; --bar-target:#FF5C8A; --bar-empty:rgba(20,22,40,.18);
-  --phase-maintain:#5B48F5; --phase-shred:#14B88B; --phase-surplus:#FF5C8A;
+  --phase-maintain:#5B48F5; --phase-shred:#14B88B; --phase-surplus:#FF5C8A; --weight:#E08A00;
   --scan-bg:linear-gradient(115deg,#DAD3FF 0%,#C3EBFF 40%,#CDFBE8 70%,#FFE8C9 100%); --scan-text:#12131C; --scan-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(91,72,245,.16),0 10px 24px -12px rgba(91,72,245,.5);
   --swipe-bg:linear-gradient(180deg,#F2456B,#D41F4A); --swipe-text:#FFFFFF;
   --bite-core:#FFFFFF; --bite-glow:rgba(110,86,255,.75); --bite-text:#4A37E8;
@@ -981,10 +981,15 @@ html.in-frame .tabs{bottom:22px}
 .phase:hover{border-color:var(--border-strong)}
 .phase:active{transform:scale(var(--press))}
 .phase i{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+/* the phase and the bodyweight side by side */
+.pillen{display:flex;flex-wrap:wrap;gap:8px;justify-self:start}
+.phase.gw{color:var(--text);background:var(--neutral-soft);font-variant-numeric:tabular-nums}
+.phase.gw i{background:var(--weight)}
+.phase.gw.leer{color:var(--text-3)}
 @media (max-width:560px){
   .heute{grid-template-columns:1fr;justify-items:center;text-align:left}
   .heute .zeilen{width:100%}
-  .phase{justify-self:center}
+  .phase,.pillen{justify-self:center}
 }
 
 .kacheln{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap);height:100%}
@@ -1006,6 +1011,12 @@ html.in-frame .tabs{bottom:22px}
 .legende span{display:inline-flex;align-items:center;gap:6px}
 .legende i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .legende i.strich{height:0;border-top:1.6px dashed var(--bar-target);border-radius:0;width:14px}
+.legende i.gw{height:0;border-top:2px solid var(--weight);border-radius:0;width:14px;position:relative}
+.legende i.gw::after{content:'';position:absolute;left:4px;top:-4px;width:6px;height:6px;border-radius:50%;background:var(--weight)}
+.diagramm .gwlinie{fill:none;stroke:var(--weight);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;animation:gwAuf .6s var(--ease) .45s both}
+.diagramm .gwpunkt{fill:var(--weight);stroke:var(--surface);stroke-width:1.2;animation:gwAuf .6s var(--ease) .45s both}
+.diagramm .gwachse{fill:var(--weight);font-weight:600;paint-order:stroke;stroke:var(--surface-raised,var(--bg));stroke-width:3px;stroke-linejoin:round}
+@keyframes gwAuf{from{opacity:0}}
 
 /* the macro split reveals left to right (transform only) */
 .split{display:flex;height:14px;border-radius:8px;overflow:hidden;gap:2px;margin:6px 0 14px;transform-origin:0 50%;animation:breit 1s var(--ease) both}
@@ -1249,6 +1260,17 @@ html.in-frame .tabs{bottom:22px}
 /* the classic "+312" when the bite is switched off */
 .plus{position:fixed;z-index:85;pointer-events:none;font-family:var(--font-num);font-weight:800;font-size:26px;color:var(--bite-text);text-shadow:0 4px 18px var(--bite-glow);animation:plus 1.3s var(--ease) forwards}
 @keyframes plus{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.06)}100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
+
+/* toasts never catch a tap (the tile under one stays usable), and on the phone they sit at the top, under the
+   header, away from the entry just logged */
+.toasts,.toast{pointer-events:none}
+@media (max-width:899px){
+  .toasts{top:calc(10px + var(--sat));bottom:auto}
+  .toasts .toast{animation-name:toastVonOben}
+  .toasts .toast.is-leaving{animation-name:toastNachOben}
+}
+@keyframes toastVonOben{from{opacity:0;transform:translateY(-16px) scale(.96)}}
+@keyframes toastNachOben{to{opacity:0;transform:translateY(-10px) scale(.98)}}
 
 .ruhig *{animation:none!important}
 @media (prefers-reduced-motion:reduce){
@@ -2745,7 +2767,9 @@ function grauVon(rgba, n){
    { app, v, saved,
      config: { name, targets: { maintain|shred|surplus: { kcal, protein, carbs, fat } }, phaseFrom: [{ from, phase }] },
      foods:  { id: { name, brand, barcode, unit, k, p, c, f (all per 100 g/ml), portion: { name, g } | null, fav, made, created, updated } },
-     days:   { 'YYYY-MM-DD': { phase?, items: [{ id, food, name, brand, g, meal, k, p, c, f, at }] } } }
+     days:   { 'YYYY-MM-DD': { phase?, items: [{ id, food, name, brand, g, meal, k, p, c, f, at }] } },
+     weights: { 'YYYY-MM-DD': kg } }
+   Bodyweight sits apart from the days: an older build keeps it as an unknown field (it drops days without items).
    Each logged item keeps its own copy of the values per 100, so a later edit of the food never changes the past
    by accident (the food dialog asks whether to update logged entries).                                          */
 const APP = 'calorie-tracker', VERSION = 1;
@@ -2767,7 +2791,7 @@ let DATA = null;
 function leer(){
   return { app: APP, v: VERSION, saved: null,
     config: { name: '', targets: { maintain: ziel0(), shred: ziel0(), surplus: ziel0() }, phaseFrom: [] },
-    foods: {}, days: {} };
+    foods: {}, days: {}, weights: {} };
 }
 function ziel0(){ return { kcal: null, protein: null, carbs: null, fat: null, split: null }; }
 /* The macro targets are a split of the kcal target in percent, so they always add up to it:
@@ -2834,6 +2858,9 @@ function normalize(o){
     if (t0.items.length || t0.phase) days[iso] = t0;
   }
   d.days = days;
+  const weights = {};
+  for (const iso in (o.weights || {})){ const kg = num(o.weights[iso], 20, 400); if (/^\d{4}-\d{2}-\d{2}$/.test(iso) && kg) weights[iso] = Math.round(kg * 10) / 10; }
+  d.weights = weights;
   return d;
 }
 
@@ -2855,6 +2882,13 @@ function phaseVon(iso){
 }
 function zielVon(iso){ return DATA.config.targets[phaseVon(iso)] || ziel0(); }
 function zielGesetzt(){ return PHASES.some(p => DATA.config.targets[p.id].kcal); }
+
+/* ---------- bodyweight: one figure per day, in kg */
+function gewicht(iso){ const kg = DATA.weights[iso]; return typeof kg === 'number' ? kg : null; }
+function gewichteIn(von, bis){ return Object.keys(DATA.weights).filter(i => i >= von && i <= bis).sort().map(iso => ({ iso, kg: DATA.weights[iso] })); }
+/* the last weigh-in before a day */
+function gewichtVor(iso){ const v = Object.keys(DATA.weights).filter(i => i < iso).sort().pop(); return v ? { iso: v, kg: DATA.weights[v] } : null; }
+const kg1 = x => (Math.round(x * 10) / 10).toFixed(1);
 
 /* ---------- foods */
 function foodListe(){ return Object.keys(DATA.foods).map(id => Object.assign({ id }, DATA.foods[id])); }
@@ -2929,6 +2963,10 @@ function agg(sc){
   r.schnittKcal = r.geloggt ? r.kcal / r.geloggt : 0;
   r.schnittP = r.geloggt ? r.p / r.geloggt : 0;
   r.schnittDiff = r.mitZiel ? r.diffSumme / r.mitZiel : null;
+  /* bodyweight: the weigh-ins of the period so far, and the last one before it (where the shift starts from) */
+  r.gewichte = gewichteIn(sc.von, sc.bis < TODAY ? sc.bis : TODAY);
+  r.gewichtVorher = gewichtVor(sc.von);
+  r.schnittKg = r.gewichte.length ? r.gewichte.reduce((s, x) => s + x.kg, 0) / r.gewichte.length : null;
   return r;
 }
 /* weeks for the YTD chart: average per logged day and the average target */
@@ -3024,7 +3062,7 @@ async function ablegen(blob, name){
   setTimeout(() => { URL.revokeObjectURL(u); a.remove(); }, 800);
   return { ok: true, name, download: true };
 }
-const zaehl = d => Object.keys(d.foods).length + '/' + Object.keys(d.days).length + '/' + Object.values(d.days).reduce((s, t) => s + t.items.length, 0);
+const zaehl = d => Object.keys(d.foods).length + '/' + Object.keys(d.days).length + '/' + Object.values(d.days).reduce((s, t) => s + t.items.length, 0) + '/' + Object.keys(d.weights || {}).length;
 function inhalt(){
   DATA.settings = Object.assign({}, DATA.settings, { theme: Kit.theme() });
   DATA.saved = new Date().toISOString();
@@ -3179,8 +3217,10 @@ function toast(msg, fehler, sub){
   box.appendChild(t);
   while (box.children.length > 3) box.firstChild.remove();
   let weg = false;
-  const geh = () => { if (weg) return; weg = true; t.classList.add('is-leaving'); setTimeout(() => t.remove(), 260); };
-  setTimeout(geh, fehler ? 5200 : 3200);
+  const geh = () => { if (weg) return; weg = true; document.removeEventListener('pointerdown', geh, true); t.classList.add('is-leaving'); setTimeout(() => t.remove(), 260); };
+  setTimeout(geh, fehler ? 5200 : 2600);
+  /* taps go through it (CSS); the next tap anywhere also sends it away */
+  setTimeout(() => { if (!weg) document.addEventListener('pointerdown', geh, true); }, 0);
 }
 
 /* ================================================================ emblem and background: the guilloché of the house icons */
@@ -3227,8 +3267,14 @@ function kpiLinien(a){
     w.nT = x.nT; w.nZ = x.nZ;
   });
   const geloggt = bisher.filter(t => t.geloggt), mitN = wo.filter(w => w.n);
-  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ) }
-             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ) };
+  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ), kg: gewichtWochen(a.gewichte).map(w => w.kg) }
+             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ), kg: a.gewichte.map(x => x.kg) };
+}
+/* weigh-ins as weekly averages (YTD): [{ mo, kg }] */
+function gewichtWochen(liste){
+  const w = [];
+  liste.forEach(x => { const mo = ISO(monday(P(x.iso))); let y = w[w.length - 1]; if (!y || y.mo !== mo){ y = { mo, s: 0, n: 0 }; w.push(y); } y.s += x.kg; y.n++; });
+  return w.map(y => ({ mo: y.mo, kg: y.s / y.n }));
 }
 function kpiGlatt(pts){
   let d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
@@ -3631,7 +3677,7 @@ function seiteOverview(){
       makroZeile('Protein', 'var(--prot)', r.s.p, r.z.protein, 'g'),
       makroZeile('Carbs', 'var(--carb)', r.s.c, r.z.carbs, 'g'),
       makroZeile('Fat', 'var(--fett)', r.s.f, r.z.fat, 'g'),
-      h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(tg, seiteOverview) }, [h('i'), PHASE[ph].name])
+      h('div', { class: 'pillen' }, [h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(tg, seiteOverview) }, [h('i'), PHASE[ph].name]), gewichtKnopf(tg, seiteOverview)])
     ])
   ]);
   raster.appendChild(heute);
@@ -3640,7 +3686,7 @@ function seiteOverview(){
   const zielTxt = a.schnittDiff === null ? (zielGesetzt() ? 'No target on these days' : 'Set a target to compare') :
     (Math.abs(a.schnittDiff) < 1 ? 'Right on target' : tsd(Math.abs(a.schnittDiff)) + ' kcal ' + (a.schnittDiff > 0 ? 'above' : 'below') + ' target');
   /* KPI tiles: value, sparkline (travelling light), delta against the previous period */
-  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.imZiel, a.mitZiel].join('|');
+  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.gewichte.map(x => x.iso + x.kg).join(',')].join('|');
   const kpiRuhig = RUHIG || kpiSchluessel === KPI_ZULETZT; KPI_ZULETZT = kpiSchluessel;
   const vp = vorperiode(), av = vp.a, linien = kpiLinien(a), sparks = [];
   const kachel = (k, wert, einheit, f, fmt, x) => {
@@ -3660,6 +3706,14 @@ function seiteOverview(){
   const dZahl = (d, einheit, besser, titel) => (d === null || !isFinite(d) || Math.round(d) === 0) ? null :
     { txt: (d > 0 ? '+' : '\u2212') + tsd(Math.abs(d)) + (einheit ? ' ' + einheit : '') + ' ' + vs, gut: besser === 0 ? false : (d > 0) === (besser > 0), titel: titel + ' ' + vs };
   const tageText = S.modus === 'ytd' ? 'days' : 'days';
+  /* bodyweight: the last weigh-in of the period, the shift since the last one before it (or the period's first);
+     the delta compares the average weight with the period before. Lower counts as better only in a mostly-shred period. */
+  const gw = a.gewichte, gwLetzt = gw.length ? gw[gw.length - 1] : null, gwBasis = a.gewichtVorher || (gw.length > 1 ? gw[0] : null);
+  const gwText = !gwLetzt ? 'Weigh in on Entry' : !gwBasis ? 'Weighed on ' + tagKurz(gwLetzt.iso)
+    : (Math.abs(gwLetzt.kg - gwBasis.kg) < .05 ? 'Unchanged' : (gwLetzt.kg > gwBasis.kg ? '+' : '−') + kg1(Math.abs(gwLetzt.kg - gwBasis.kg)) + ' kg') + ' since ' + tagKurz(gwBasis.iso);
+  const gwBesser = a.phasen.shred > a.phasen.maintain + a.phasen.surplus ? -1 : 0, gwD = a.schnittKg !== null && av.schnittKg !== null ? a.schnittKg - av.schnittKg : null;
+  const gwDelta = gwD === null || Math.abs(gwD) < .05 ? null :
+    { txt: (gwD > 0 ? '+' : '−') + kg1(Math.abs(gwD)) + ' kg ' + vs, gut: gwBesser !== 0 && (gwD > 0) === (gwBesser > 0), titel: 'Average bodyweight ' + vs };
   raster.appendChild(h('div', { class: 'kacheln s7' }, [
     kachel('Average per day', a.geloggt ? a.schnittKcal : null, 'kcal', a.geloggt ? zielTxt : 'Nothing logged yet', null,
       { linie: linien.kcal, farbe: 'var(--energy)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittKcal - av.schnittKcal, 'kcal', 0, 'Average kcal per logged day') : null }),
@@ -3667,8 +3721,7 @@ function seiteOverview(){
       { linie: linien.p, farbe: 'var(--prot)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittP - av.schnittP, 'g', 1, 'Average protein per logged day') : null }),
     kachel('Days logged', a.geloggt, 'of ' + a.kalender, a.kalender ? Math.round(a.geloggt / a.kalender * 100) + ' % of the ' + tageText + ' so far' : 'The period has not started', null,
       { linie: linien.tage, delta: a.kalender && av.kalender && av.geloggt ? dZahl((a.geloggt / a.kalender - av.geloggt / av.kalender) * 100, 'pts', 1, 'Share of days logged, in percentage points,') : null }),
-    kachel('On target', a.mitZiel ? a.imZiel : null, a.mitZiel ? 'days' : '', a.mitZiel ? 'Within 10 % of that day\u2019s target' : 'Needs a kcal target', null,
-      { linie: linien.ziel, farbe: 'var(--success)', delta: a.mitZiel && av.mitZiel ? dZahl((a.imZiel / a.mitZiel - av.imZiel / av.mitZiel) * 100, 'pts', 1, 'Share of days on target, in percentage points,') : null })
+    kachel('Bodyweight', gwLetzt ? gwLetzt.kg : null, gwLetzt ? 'kg' : '', gwText, kg1, { linie: linien.kg, farbe: 'var(--weight)', delta: gwDelta })
   ]));
   /* the lines are drawn once the tiles are on the page (they need their width) */
   requestAnimationFrame(() => sparks.forEach(([sv, d], i) => { if (sv.isConnected) kpiSpark(sv, d, !kpiRuhig && BEWEGUNG, 220 + i * 140); }));
@@ -3720,7 +3773,7 @@ function diagrammKarte(a, sc){
   const punkte = ytd ? wochen(a.tage).map(w => ({ label: w.mo, wert: w.wert, ziel: w.ziel, zukunft: w.zukunft, leer: !w.n, heute: w.mo === ISO(monday(P(S.tag))) }))
                      : a.tage.map(t => ({ label: t.iso, wert: t.s.kcal, ziel: t.z.kcal, zukunft: t.zukunft, leer: !t.geloggt, heute: t.iso === S.tag }));
   const karte = h('div', { class: 'glas card karte' }, [h('div', { class: 'kkopf' }, [
-    h('div', {}, [h('h3', {}, [ytd ? 'Energy per week' : 'Energy per day']), h('p', { class: 'unter' }, [ytd ? 'Average kcal per logged day in each week' : 'kcal eaten each day'])])
+    h('div', {}, [h('h3', {}, [ytd ? 'Energy per week' : 'Energy per day']), h('p', { class: 'unter' }, [(ytd ? 'Average kcal per logged day in each week' : 'kcal eaten each day') + (a.gewichte.length ? ', and your bodyweight' : '')])])
   ])]);
   if (!a.geloggt){
     karte.appendChild(h('div', { class: 'leer-hinweis' }, [h('b', {}, ['Nothing logged in ' + (ytd ? S.jahr : MONTHS[S.monat]) + ' yet']), 'Scan or pick a food on Entry and it appears here.',
@@ -3759,6 +3812,21 @@ function diagrammKarte(a, sc){
     pfad += (an ? 'L' + x0.toFixed(1) + ',' + yy : 'M' + x0.toFixed(1) + ',' + yy) + 'L' + x1.toFixed(1) + ',' + yy; an = true;
   });
   if (pfad) s += '<path class="ziellinie" d="' + pfad + '"/>';
+  /* bodyweight on its own scale (labels on the left): a line through the weigh-ins, bridging days without one.
+     YTD: the weekly average. At least 2 kg of range, so a few hundred grams do not look like a landslide. */
+  const gwPunkte = [];
+  if (ytd){ const wk = {}; gewichtWochen(a.gewichte).forEach(w => { wk[w.mo] = w.kg; }); punkte.forEach((p, i) => { if (wk[p.label] !== undefined) gwPunkte.push({ i, kg: wk[p.label], label: p.label }); }); }
+  else { punkte.forEach((p, i) => { const kg = p.zukunft ? null : gewicht(p.label); if (kg !== null) gwPunkte.push({ i, kg, label: p.label }); }); }
+  if (gwPunkte.length){
+    let lo = Math.min(...gwPunkte.map(p => p.kg)), hi = Math.max(...gwPunkte.map(p => p.kg));
+    if (hi - lo < 2){ const m = (hi + lo) / 2; lo = m - 1; hi = m + 1; }
+    const rand = (hi - lo) * .12; lo -= rand; hi += rand;
+    const yk = v => oben + 10 + (H - unten - oben - 20) * (1 - (v - lo) / (hi - lo)), xk = i => i * sp + sp / 2;
+    const st = hi - lo > 12 ? 5 : (hi - lo > 5 ? 2 : 1);
+    for (let v = Math.ceil(lo / st) * st; v <= hi; v += st) s += '<text class="achse gwachse" x="0" y="' + (yk(v) + 3.5).toFixed(1) + '" text-anchor="start">' + v + ' kg</text>';
+    if (gwPunkte.length > 1) s += '<path class="gwlinie" vector-effect="non-scaling-stroke" d="' + gwPunkte.map((p, j) => (j ? 'L' : 'M') + xk(p.i).toFixed(1) + ',' + yk(p.kg).toFixed(1)).join('') + '"/>';
+    gwPunkte.forEach(p => { s += '<circle class="gwpunkt" cx="' + xk(p.i).toFixed(1) + '" cy="' + yk(p.kg).toFixed(1) + '" r="3.2"><title>' + (ytd ? 'Week of ' + tagKurz(p.label) + ': ' + kg1(p.kg) + ' kg on average' : tagLang(p.label) + ': ' + kg1(p.kg) + ' kg') + '</title></circle>'; });
+  }
   const box = h('div', { class: 'diagramm' });
   box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' + (ytd ? 'Average kcal per week' : 'kcal per day') + '">' + s + '</svg>';
   /* text must not stretch with the bars: counter-scale it */
@@ -3768,11 +3836,13 @@ function diagrammKarte(a, sc){
     if (!bw2) return;
     const fx = W / bw2;
     $$('text', svgEl).forEach(t => { const x = Number(t.getAttribute('x')); t.setAttribute('transform', 'translate(' + x + ' 0) scale(' + fx.toFixed(3) + ' 1) translate(' + (-x) + ' 0)'); });
+    $$('circle', svgEl).forEach(c => { const x = Number(c.getAttribute('cx')); c.setAttribute('transform', 'translate(' + x + ' 0) scale(' + fx.toFixed(3) + ' 1) translate(' + (-x) + ' 0)'); });
   });
   karte.appendChild(box);
   karte.appendChild(h('div', { class: 'legende' }, [
     h('span', {}, [h('i', { style: { background: 'linear-gradient(var(--bar-1),var(--bar-2))' } }), ytd ? 'Average per logged day' : 'Eaten']),
     pfad ? h('span', {}, [h('i', { class: 'strich' }), 'Target of the day\u2019s phase']) : null,
+    gwPunkte.length ? h('span', {}, [h('i', { class: 'gw' }), ytd ? 'Bodyweight, weekly average' : 'Bodyweight']) : null,
     h('span', {}, [h('i', { style: { background: 'linear-gradient(var(--bar-today-1),var(--bar-today-2))' } }), ytd ? (S.tag === TODAY ? 'This week' : 'Week of ' + tagKurz(S.tag)) : (S.tag === TODAY ? 'Today' : tagKurz(S.tag))])
   ]));
   return karte;
@@ -3977,7 +4047,7 @@ function seiteEntry(){
     makroZeile('Protein', 'var(--prot)', r.s.p, r.z.protein, 'g'),
     h('div', { style: { display: 'flex', gap: '12px', fontSize: '12.5px', color: 'var(--t3)', flexWrap: 'wrap' } }, [
       h('span', {}, ['Carbs ' + g1(r.s.c) + ' g']), h('span', {}, ['Fat ' + g1(r.s.f) + ' g'])]),
-    h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(iso, seiteEntry) }, [h('i'), PHASE[ph].name])
+    h('div', { class: 'pillen' }, [h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(iso, seiteEntry) }, [h('i'), PHASE[ph].name]), gewichtKnopf(iso, seiteEntry)])
   ])]));
 
   /* scan and search */
@@ -4255,7 +4325,44 @@ function logSheet(food, opt){
     gebucht(neu, iso);
   };
   malVor();
-  const d = blatt(quelle.name, (quelle.brand ? quelle.brand + '. ' : '') + tsd(quelle.k) + ' kcal per 100 ' + quelle.unit + (it ? '. Logged on ' + tagKurz(iso) + '.' : ''), body, { fokus: TOUCH ? null : 'input' });
+  const d = blatt(quelle.name,(quelle.brand ? quelle.brand + '. ' : '') + tsd(quelle.k) + ' kcal per 100 ' + quelle.unit + (it ? '. Logged on ' + tagKurz(iso) + '.' : ''), body, { fokus: TOUCH ? null : 'input' });
+}
+
+/* ---------- bodyweight: a pill next to the phase on the day card (Overview and Entry), one figure per day */
+function gewichtKnopf(iso, fertig){
+  const kg = gewicht(iso);
+  return h('button', { type: 'button', class: 'phase gw' + (kg === null ? ' leer' : ''), onclick: () => gewichtBlatt(iso, fertig) }, [h('i'), kg === null ? 'Add weight' : kg1(kg) + ' kg']);
+}
+function gewichtBlatt(iso, fertig){
+  const kg = gewicht(iso), vor = gewichtVor(iso);
+  const gIn = h('input', { type: 'text', inputmode: 'decimal', value: kg !== null ? kg1(kg) : (vor ? kg1(vor.kg) : ''), placeholder: '0.0', 'aria-label': 'Bodyweight in kg', enterkeyhint: 'done', autocomplete: 'off' });
+  const umrech = h('div', { class: 'umrech' });
+  const los = h('button', { type: 'button', class: 'btn btn--primary' }, ['Save']);
+  const wert = () => { const v = zahlLesen(gIn.value); return v !== null && v >= 20 && v <= 400 ? Math.round(v * 10) / 10 : null; };
+  const seit = v => (Math.abs(v - vor.kg) < .05 ? 'unchanged' : (v > vor.kg ? '+' : '−') + kg1(Math.abs(v - vor.kg)) + ' kg') + ' since ' + tagKurz(vor.iso);
+  const mal = () => {
+    gIn.style.width = Math.max(2.4, gIn.value.length + .4) + 'ch';
+    const v = wert();
+    umrech.textContent = v !== null && vor ? seit(v) : (vor ? 'Last weigh-in ' + kg1(vor.kg) + ' kg on ' + tagKurz(vor.iso) : 'In kg, e.g. 78.4');
+    los.disabled = v === null;
+  };
+  gIn.oninput = mal;
+  gIn.onfocus = () => setTimeout(() => gIn.select(), 0);
+  gIn.onkeydown = e => { if (e.key === 'Enter' && !los.disabled) los.click(); };
+  const kachel = h('div', { class: 'mengenkachel', onclick: e => { if (e.target !== gIn){ gIn.focus(); gIn.select(); } } }, [
+    h('div', { class: 'k' }, ['Bodyweight']), h('div', { class: 'gramm' }, [gIn, h('em', {}, ['kg'])]), umrech
+  ]);
+  los.onclick = () => {
+    const v = wert(); if (v === null) return;
+    DATA.weights[iso] = v; d.zu(); aendern(); fertig();
+    toast('Balance sheet updated.', false, kg1(v) + ' kg on ' + tagKurz(iso) + (vor ? ', ' + seit(v) : ''));
+  };
+  const body = h('div', {}, [kachel, h('div', { class: 'aktion' }, [
+    kg !== null ? h('button', { type: 'button', class: 'btn btn--quiet-danger links', onclick: () => { delete DATA.weights[iso]; d.zu(); aendern(); fertig(); toast('Weight removed', false, tagKurz(iso)); } }, ['Remove']) : null,
+    los
+  ])]);
+  mal();
+  const d = blatt('Bodyweight', (iso === TODAY ? 'Today, ' + tagKurz(iso) : tagLang(iso)) + '. One weigh-in a day, ideally in the morning.', body, { fokus: TOUCH ? null : 'input' });
 }
 
 /* ================================================================ scanning: photo -> code -> your food

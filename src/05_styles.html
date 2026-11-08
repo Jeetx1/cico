@@ -73,10 +73,15 @@
 .phase:hover{border-color:var(--border-strong)}
 .phase:active{transform:scale(var(--press))}
 .phase i{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+/* the phase and the bodyweight side by side */
+.pillen{display:flex;flex-wrap:wrap;gap:8px;justify-self:start}
+.phase.gw{color:var(--text);background:var(--neutral-soft);font-variant-numeric:tabular-nums}
+.phase.gw i{background:var(--weight)}
+.phase.gw.leer{color:var(--text-3)}
 @media (max-width:560px){
   .heute{grid-template-columns:1fr;justify-items:center;text-align:left}
   .heute .zeilen{width:100%}
-  .phase{justify-self:center}
+  .phase,.pillen{justify-self:center}
 }
 
 .kacheln{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap);height:100%}
@@ -98,6 +103,12 @@
 .legende span{display:inline-flex;align-items:center;gap:6px}
 .legende i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .legende i.strich{height:0;border-top:1.6px dashed var(--bar-target);border-radius:0;width:14px}
+.legende i.gw{height:0;border-top:2px solid var(--weight);border-radius:0;width:14px;position:relative}
+.legende i.gw::after{content:'';position:absolute;left:4px;top:-4px;width:6px;height:6px;border-radius:50%;background:var(--weight)}
+.diagramm .gwlinie{fill:none;stroke:var(--weight);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;animation:gwAuf .6s var(--ease) .45s both}
+.diagramm .gwpunkt{fill:var(--weight);stroke:var(--surface);stroke-width:1.2;animation:gwAuf .6s var(--ease) .45s both}
+.diagramm .gwachse{fill:var(--weight);font-weight:600;paint-order:stroke;stroke:var(--surface-raised,var(--bg));stroke-width:3px;stroke-linejoin:round}
+@keyframes gwAuf{from{opacity:0}}
 
 /* the macro split reveals left to right (transform only) */
 .split{display:flex;height:14px;border-radius:8px;overflow:hidden;gap:2px;margin:6px 0 14px;transform-origin:0 50%;animation:breit 1s var(--ease) both}
@@ -341,6 +352,17 @@
 /* the classic "+312" when the bite is switched off */
 .plus{position:fixed;z-index:85;pointer-events:none;font-family:var(--font-num);font-weight:800;font-size:26px;color:var(--bite-text);text-shadow:0 4px 18px var(--bite-glow);animation:plus 1.3s var(--ease) forwards}
 @keyframes plus{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}20%{opacity:1;transform:translate(-50%,-6px) scale(1.06)}100%{opacity:0;transform:translate(-50%,-70px) scale(1)}}
+
+/* toasts never catch a tap (the tile under one stays usable), and on the phone they sit at the top, under the
+   header, away from the entry just logged */
+.toasts,.toast{pointer-events:none}
+@media (max-width:899px){
+  .toasts{top:calc(10px + var(--sat));bottom:auto}
+  .toasts .toast{animation-name:toastVonOben}
+  .toasts .toast.is-leaving{animation-name:toastNachOben}
+}
+@keyframes toastVonOben{from{opacity:0;transform:translateY(-16px) scale(.96)}}
+@keyframes toastNachOben{to{opacity:0;transform:translateY(-10px) scale(.98)}}
 
 .ruhig *{animation:none!important}
 @media (prefers-reduced-motion:reduce){

@@ -4,7 +4,7 @@
    node tests/test_app.js [path to a real data .json for an extra open + save round trip, kept in private/] */
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path'), os = require('os');
-const URL = 'file://' + path.resolve(__dirname, '../docs/index.html');
+const URL = require('url').pathToFileURL(path.resolve(__dirname, '../docs/index.html')).href;   // also right for Windows paths
 const FIX = path.join(__dirname, 'fixture.json'), REAL = process.argv[2];
 const clock = (y, m, d, h, mi) => `const _D=Date; const FIX=new _D(${y},${m},${d},${h},${mi},0).getTime();
 class FD extends _D{constructor(...a){ if(a.length) super(...a); else super(FIX);} static now(){return FIX;}}; window.Date=FD;
@@ -82,6 +82,16 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   check(txt.includes(tsd(heute)), 'today eaten ' + tsd(heute) + ' kcal shown');
   check(txt.includes('Light shred'), 'today is in the shred phase');
   check(await pg.$$eval('.kacheln .spark path.spark__line', ps => ps.filter(p => (p.getAttribute('d') || '').length > 10).length) >= 2, 'KPI tiles draw their lines');
+  // bodyweight: the tile replaces On target, the chart draws a line through October's weigh-ins
+  const gwOkt = Object.keys(fx.weights).filter(k => k.startsWith('2026-10') && k <= '2026-10-14').sort();
+  const gwVor = Object.keys(fx.weights).filter(k => k < '2026-10-01').sort().pop();
+  const gwShift = fx.weights[gwOkt[gwOkt.length - 1]] - fx.weights[gwVor];
+  const gwKachel = await pg.innerText('.kachel:has-text("Bodyweight")');
+  check(!txt.includes('On target') && gwKachel.includes(fx.weights[gwOkt[gwOkt.length - 1]].toFixed(1)) && gwKachel.includes((gwShift < 0 ? '−' : '+') + Math.abs(gwShift).toFixed(1) + ' kg since 30 Sep'),
+    'Bodyweight tile: last weigh-in and the shift since the last one before October (' + gwKachel.replace(/\s+/g, ' ') + ')');
+  check((await pg.$$('#p-overview .diagramm circle.gwpunkt')).length === gwOkt.length && await pg.isVisible('#p-overview .diagramm path.gwlinie') && txt.includes('Bodyweight'),
+    'Energy per day draws the bodyweight line through ' + gwOkt.length + ' weigh-ins');
+  check(await pg.evaluate(() => getComputedStyle(document.querySelector('#toasts')).pointerEvents === 'none'), 'toasts never catch a tap');
   await pg.click('.segmented button:has-text("YTD")'); await pg.waitForTimeout(500);
   txt = await pg.innerText('#p-overview');
   check(txt.includes('Energy per week') && txt.includes('January to October 2026'), 'YTD shows the weekly chart');
@@ -92,6 +102,13 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   check(await pg.isVisible('.blatt h2:has-text("Banana")'), 'a quick-pick chip opens its log sheet');
   await pg.click('.blatt .aktion .btn:has-text("Add to")'); await pg.waitForTimeout(700);
   check((await pg.$$('#p-entry .mahlzeit .zeile')).length === vorher + 1, 'food logged');
+  check(await pg.evaluate(() => { const t = document.querySelector('#toasts .toast'); return !!t && getComputedStyle(t).pointerEvents === 'none'; }), 'the posting toast lets taps through to the tile under it');
+  await pg.click('#p-entry .tagsumme .phase.gw'); await pg.waitForTimeout(400);
+  check(await pg.isVisible('.blatt h2:has-text("Bodyweight")'), 'the weight pill on Entry opens the bodyweight sheet');
+  await pg.fill('.blatt .gramm input', '79,2');
+  check((await pg.innerText('.blatt .umrech')).includes('since'), 'the sheet shows the shift since the last weigh-in');
+  await pg.click('.blatt .aktion .btn:has-text("Save")'); await pg.waitForTimeout(500);
+  check((await pg.innerText('#p-entry .tagsumme .phase.gw')).includes('79.2 kg'), 'bodyweight logged for the day (comma typed as decimal point)');
   await pg.fill('#p-entry .suche input', 'choc'); await pg.waitForTimeout(250);
   check((await pg.innerText('#p-entry')).includes('Dark chocolate'), 'search finds by part of the name');
   await pg.fill('#p-entry .suche input', '');
@@ -106,8 +123,9 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   check(!(await pg.getAttribute('#sichern', 'class')).includes('is-dirty'), 'Save stops blinking after saving');
   check(saved.data.app === 'calorie-tracker' && saved.data.settings && saved.data.settings.theme === 'prism', 'the look travels in the file');
   check(saved.data.days['2026-10-14'].items.length === vorher + 1, 'saved file holds the new item');
+  check(saved.data.weights && saved.data.weights['2026-10-14'] === 79.2 && Object.keys(saved.data.weights).length === Object.keys(fx.weights).length, 'saved file holds the bodyweights');
   check(Object.keys(saved.data.foods).length === Object.keys(fx.foods).length && Object.keys(saved.data.days).length >= Object.keys(fx.days).length, 'foods and days kept');
-  const unbekannt = Object.keys(fx).filter(k => !['app', 'v', 'saved', 'config', 'foods', 'days', 'settings'].includes(k));
+  const unbekannt = Object.keys(fx).filter(k => !['app', 'v', 'saved', 'config', 'foods', 'days', 'weights', 'settings'].includes(k));
   check(unbekannt.every(k => JSON.stringify(saved.data[k]) === JSON.stringify(fx[k])), 'unknown fields kept: ' + (unbekannt.join(', ') || 'none in fixture'));
   check(!errs.length, 'no script errors (fixture): ' + errs.join('; '));
   await ctx.close();

@@ -197,7 +197,7 @@ function seiteEntry(){
     makroZeile('Protein', 'var(--prot)', r.s.p, r.z.protein, 'g'),
     h('div', { style: { display: 'flex', gap: '12px', fontSize: '12.5px', color: 'var(--t3)', flexWrap: 'wrap' } }, [
       h('span', {}, ['Carbs ' + g1(r.s.c) + ' g']), h('span', {}, ['Fat ' + g1(r.s.f) + ' g'])]),
-    h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(iso, seiteEntry) }, [h('i'), PHASE[ph].name])
+    h('div', { class: 'pillen' }, [h('button', { type: 'button', class: 'phase', onclick: () => phaseDialog(iso, seiteEntry) }, [h('i'), PHASE[ph].name]), gewichtKnopf(iso, seiteEntry)])
   ])]));
 
   /* scan and search */
@@ -475,6 +475,43 @@ function logSheet(food, opt){
     gebucht(neu, iso);
   };
   malVor();
-  const d = blatt(quelle.name, (quelle.brand ? quelle.brand + '. ' : '') + tsd(quelle.k) + ' kcal per 100 ' + quelle.unit + (it ? '. Logged on ' + tagKurz(iso) + '.' : ''), body, { fokus: TOUCH ? null : 'input' });
+  const d = blatt(quelle.name,(quelle.brand ? quelle.brand + '. ' : '') + tsd(quelle.k) + ' kcal per 100 ' + quelle.unit + (it ? '. Logged on ' + tagKurz(iso) + '.' : ''), body, { fokus: TOUCH ? null : 'input' });
+}
+
+/* ---------- bodyweight: a pill next to the phase on the day card (Overview and Entry), one figure per day */
+function gewichtKnopf(iso, fertig){
+  const kg = gewicht(iso);
+  return h('button', { type: 'button', class: 'phase gw' + (kg === null ? ' leer' : ''), onclick: () => gewichtBlatt(iso, fertig) }, [h('i'), kg === null ? 'Add weight' : kg1(kg) + ' kg']);
+}
+function gewichtBlatt(iso, fertig){
+  const kg = gewicht(iso), vor = gewichtVor(iso);
+  const gIn = h('input', { type: 'text', inputmode: 'decimal', value: kg !== null ? kg1(kg) : (vor ? kg1(vor.kg) : ''), placeholder: '0.0', 'aria-label': 'Bodyweight in kg', enterkeyhint: 'done', autocomplete: 'off' });
+  const umrech = h('div', { class: 'umrech' });
+  const los = h('button', { type: 'button', class: 'btn btn--primary' }, ['Save']);
+  const wert = () => { const v = zahlLesen(gIn.value); return v !== null && v >= 20 && v <= 400 ? Math.round(v * 10) / 10 : null; };
+  const seit = v => (Math.abs(v - vor.kg) < .05 ? 'unchanged' : (v > vor.kg ? '+' : '−') + kg1(Math.abs(v - vor.kg)) + ' kg') + ' since ' + tagKurz(vor.iso);
+  const mal = () => {
+    gIn.style.width = Math.max(2.4, gIn.value.length + .4) + 'ch';
+    const v = wert();
+    umrech.textContent = v !== null && vor ? seit(v) : (vor ? 'Last weigh-in ' + kg1(vor.kg) + ' kg on ' + tagKurz(vor.iso) : 'In kg, e.g. 78.4');
+    los.disabled = v === null;
+  };
+  gIn.oninput = mal;
+  gIn.onfocus = () => setTimeout(() => gIn.select(), 0);
+  gIn.onkeydown = e => { if (e.key === 'Enter' && !los.disabled) los.click(); };
+  const kachel = h('div', { class: 'mengenkachel', onclick: e => { if (e.target !== gIn){ gIn.focus(); gIn.select(); } } }, [
+    h('div', { class: 'k' }, ['Bodyweight']), h('div', { class: 'gramm' }, [gIn, h('em', {}, ['kg'])]), umrech
+  ]);
+  los.onclick = () => {
+    const v = wert(); if (v === null) return;
+    DATA.weights[iso] = v; d.zu(); aendern(); fertig();
+    toast('Balance sheet updated.', false, kg1(v) + ' kg on ' + tagKurz(iso) + (vor ? ', ' + seit(v) : ''));
+  };
+  const body = h('div', {}, [kachel, h('div', { class: 'aktion' }, [
+    kg !== null ? h('button', { type: 'button', class: 'btn btn--quiet-danger links', onclick: () => { delete DATA.weights[iso]; d.zu(); aendern(); fertig(); toast('Weight removed', false, tagKurz(iso)); } }, ['Remove']) : null,
+    los
+  ])]);
+  mal();
+  const d = blatt('Bodyweight', (iso === TODAY ? 'Today, ' + tagKurz(iso) : tagLang(iso)) + '. One weigh-in a day, ideally in the morning.', body, { fokus: TOUCH ? null : 'input' });
 }
 
