@@ -309,9 +309,8 @@ function baueTabs(){
   if (!$('#look')){ const lb = Kit.lookButton(); lb.id = 'look'; $('#einstellungen').parentNode.insertBefore(lb, $('#einstellungen')); }
   const o = $('#ordner'); o.hidden = !Kit.folder.can; o.onclick = ordnerDialog;
 }
-/* Glass's drifting light holds still for a moment while a page, a day or a sheet is built (see 07_effects) */
-let lichtT = 0;
-function lichtRuht(){ const r = document.documentElement; r.classList.add('licht-ruht'); clearTimeout(lichtT); lichtT = setTimeout(() => r.classList.remove('licht-ruht'), 1200); }
+/* Glass's drifting light holds still for a moment while a page, a day or a sheet is built (Design Lab Kit.rest()) */
+function lichtRuht(){ if (window.Kit && Kit.rest) Kit.rest(); }
 function zeigeTab(id, erst){
   lichtRuht();
   const vorher = S.tab; S.tab = id;

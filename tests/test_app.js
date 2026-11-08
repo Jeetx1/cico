@@ -111,7 +111,7 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   check(heiss.includes('is-hot') && await pg.isVisible('#p-foods') && (await pg.getAttribute('#seitenknopf', 'aria-expanded')) === 'false', 'press and slide to Foods, let go: Foods opens and the menu closes');
   await seite(pg, 'overview');
   // Glass's drifting light: no blur filter, and it holds still while a page is built (it stalled page changes on the iPhone)
-  check(await pg.evaluate(() => document.documentElement.classList.contains('licht-ruht')), 'the drifting light rests while a page is built');
+  check(await pg.evaluate(() => document.documentElement.classList.contains('dl-rest')), 'the drifting light rests while a page is built');
   await pg.evaluate(() => Kit.set('glass', 'user')); await pg.waitForTimeout(300);
   check(await pg.evaluate(() => [...document.querySelectorAll('.ambient .orb')].every(o => getComputedStyle(o).filter === 'none')), 'Glass: the drifting light has no blur filter');
   await pg.waitForTimeout(400);

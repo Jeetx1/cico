@@ -52,16 +52,9 @@ html.fx-daylevel .ambient{opacity:0}
 .pegel.ohneziel .pegel__ziel{opacity:0}
 @media (max-width:899px){ .pegel__ziel span{display:none} }
 
-/* ---------------------------------------------------------------- Glass: the drifting light, lighter on the phone
-   (CICO override of the kit, 8.11.2026; candidate for the Design Lab kit). On the iPhone, three screen-sized orbs under a
-   70 px blur, moving under frosted cards, made every card re-blur each frame: page changes stalled. The orbs drop the
-   filter and get the same softness from their gradients, and the light holds still while a page, a day or a sheet is
-   built (html.licht-ruht, ~1 s; invisible at a 34-48 s drift). */
-.ambient .orb{filter:none;border-radius:0}   /* the gradient fades out before the edge: nothing to clip */
-.ambient .orb.a{background:radial-gradient(circle closest-side at 43% 43%,#3570AD 0%,rgba(53,112,173,.86) 18%,rgba(53,112,173,.58) 38%,rgba(53,112,173,.29) 58%,rgba(53,112,173,.09) 78%,rgba(53,112,173,0) 100%)}
-.ambient .orb.b{background:radial-gradient(circle closest-side,#1F6E7E 0%,rgba(31,110,126,.86) 18%,rgba(31,110,126,.58) 38%,rgba(31,110,126,.29) 58%,rgba(31,110,126,.09) 78%,rgba(31,110,126,0) 100%)}
-.ambient .orb.c{background:radial-gradient(circle closest-side,#4A4FA6 0%,rgba(74,79,166,.86) 18%,rgba(74,79,166,.58) 38%,rgba(74,79,166,.29) 58%,rgba(74,79,166,.09) 78%,rgba(74,79,166,0) 100%)}
-html.licht-ruht .ambient .orb{animation-play-state:paused}
+/* ---------------------------------------------------------------- Glass: the drifting light
+   The filter-free orbs and the rest while a page is built are in the Design Lab kit since 8.11.2026 (06_dl_effects,
+   Kit.rest()); lichtRuht() in 50_frame calls it. Only the Day level part stays CICO's own: */
 /* under the day level the light is hidden (opacity 0) but kept moving: it rests there too */
 html.fx-daylevel .ambient{visibility:hidden}
 html.fx-daylevel .ambient .orb{animation-play-state:paused}
