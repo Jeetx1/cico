@@ -43,7 +43,7 @@ function vorperiode(){
   const bis = ISO(add(new Date(Date.UTC(y, m + 1, 1)), -1));
   return { a: agg({ von, bis }), label: ytd ? String(y) : MSHORT[m] };
 }
-/* four lines for the four tiles: daily values (Month) or weekly averages (YTD); the counts as running totals */
+/* the lines for the tiles: daily values (Month) or weekly averages (YTD); the counts as running totals; maintenance as estimated */
 function kpiLinien(a){
   const ytd = S.modus === 'ytd', bisher = a.tage.filter(t => !t.zukunft);
   let nT = 0, nZ = 0;
@@ -56,8 +56,12 @@ function kpiLinien(a){
     w.nT = x.nT; w.nZ = x.nZ;
   });
   const geloggt = bisher.filter(t => t.geloggt), mitN = wo.filter(w => w.n);
-  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ), kg: gewichtWochen(a.gewichte).map(w => w.kg) }
-             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ), kg: a.gewichte.map(x => x.kg) };
+  /* maintenance: the estimate as it stood on each day (Month) or at the end of each week (YTD), where there is one */
+  const tageBisGestern = bisher.filter(t => t.iso < TODAY).map(t => t.iso);
+  const erhTage = ytd ? tageBisGestern.filter((iso, i, l) => i === l.length - 1 || ISO(monday(P(l[i + 1]))) !== ISO(monday(P(iso)))) : tageBisGestern;
+  const erh = erhTage.map(iso => erhaltung(iso).kcal).filter(x => x !== undefined);
+  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ), kg: gewichtWochen(a.gewichte).map(w => w.kg), erh }
+             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ), kg: a.gewichte.map(x => x.kg), erh };
 }
 /* weigh-ins as weekly averages (YTD): [{ mo, kg }] */
 function gewichtWochen(liste){

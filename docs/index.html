@@ -2,7 +2,7 @@
 <html lang="en" data-theme="ember">
 <head>
 <meta charset="utf-8">
-<meta name="build" content="2026-11-08.4">
+<meta name="build" content="2026-11-09.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0C0807">
 <meta name="color-scheme" content="light dark">
@@ -1590,6 +1590,47 @@ html.fx-daylevel .ambient{opacity:0}
 html.fx-daylevel .ambient{visibility:hidden}
 html.fx-daylevel .ambient .orb{animation-play-state:paused}
 
+/* ---------------------------------------------------------------- Prism: the caustic light (build 2026-11-09.1)
+   Same cause as Glass's drifting light (8.11.): the glow sat under filter:blur(64px), the two bands under blur(14px),
+   all three moving nonstop under frosted cards, so the iPhone re-blurred every card each frame (owner's test 9.11.:
+   Caustic light off = smooth). No filter any more: the glow is ten soft spots of the same spectrum on a ring (the
+   conic disc, pre-blurred), each band carries the blurred colours in its own gradient. The stops are computed from the
+   kit's originals (64 px / 14 px gaussian), once for the phone and once from 900 px. The light rests with Kit.rest()
+   like Glass's, and under the day level. CICO override, candidate for the Design Lab kit (RISE and EVEN use the same
+   light; there the loop that moves .caustic should rest too). */
+.caustic .glow{filter:none;border-radius:0;width:calc(74vmax + 240px);height:calc(74vmax + 240px);margin:-120px 0 0 -120px;
+  background:
+    radial-gradient(28% 28% at 50.0% 28.0%,rgba(110,86,255,.169) 0%,rgba(110,86,255,.145) 18%,rgba(110,86,255,.098) 38%,rgba(110,86,255,.049) 57%,rgba(110,86,255,.015) 78%,rgba(110,86,255,0) 100%),
+    radial-gradient(28% 28% at 62.9% 32.2%,rgba(70,128,242,.156) 0%,rgba(70,128,242,.134) 18%,rgba(70,128,242,.09) 38%,rgba(70,128,242,.045) 57%,rgba(70,128,242,.014) 78%,rgba(70,128,242,0) 100%),
+    radial-gradient(28% 28% at 70.9% 43.2%,rgba(22,178,227,.143) 0%,rgba(22,178,227,.123) 18%,rgba(22,178,227,.083) 38%,rgba(22,178,227,.041) 57%,rgba(22,178,227,.013) 78%,rgba(22,178,227,0) 100%),
+    radial-gradient(28% 28% at 70.9% 56.8%,rgba(26,187,192,.13) 0%,rgba(26,187,192,.112) 18%,rgba(26,187,192,.075) 38%,rgba(26,187,192,.038) 57%,rgba(26,187,192,.012) 78%,rgba(26,187,192,0) 100%),
+    radial-gradient(28% 28% at 62.9% 67.8%,rgba(31,199,150,.117) 0%,rgba(31,199,150,.101) 18%,rgba(31,199,150,.068) 38%,rgba(31,199,150,.034) 57%,rgba(31,199,150,.011) 78%,rgba(31,199,150,0) 100%),
+    radial-gradient(28% 28% at 50.0% 72.0%,rgba(149,184,95,.124) 0%,rgba(149,184,95,.106) 18%,rgba(149,184,95,.072) 38%,rgba(149,184,95,.036) 57%,rgba(149,184,95,.011) 78%,rgba(149,184,95,0) 100%),
+    radial-gradient(28% 28% at 37.1% 67.8%,rgba(255,170,46,.13) 0%,rgba(255,170,46,.112) 18%,rgba(255,170,46,.075) 38%,rgba(255,170,46,.038) 57%,rgba(255,170,46,.012) 78%,rgba(255,170,46,0) 100%),
+    radial-gradient(28% 28% at 29.1% 56.8%,rgba(255,127,96,.143) 0%,rgba(255,127,96,.123) 18%,rgba(255,127,96,.083) 38%,rgba(255,127,96,.041) 57%,rgba(255,127,96,.013) 78%,rgba(255,127,96,0) 100%),
+    radial-gradient(28% 28% at 29.1% 43.2%,rgba(255,92,138,.156) 0%,rgba(255,92,138,.134) 18%,rgba(255,92,138,.09) 38%,rgba(255,92,138,.045) 57%,rgba(255,92,138,.014) 78%,rgba(255,92,138,0) 100%),
+    radial-gradient(28% 28% at 37.1% 32.2%,rgba(180,89,199,.163) 0%,rgba(180,89,199,.14) 18%,rgba(180,89,199,.094) 38%,rgba(180,89,199,.047) 57%,rgba(180,89,199,.015) 78%,rgba(180,89,199,0) 100%)}
+.caustic .band{filter:none;border-radius:0;height:calc(7vmax + 56px);margin-top:-28px;
+  background:linear-gradient(180deg,rgba(101,96,252,0) 0%,rgba(94,103,248,.014) 10%,rgba(86,114,242,.048) 20%,rgba(78,131,228,.108) 30%,rgba(82,148,202,.154) 40%,rgba(116,158,161,.169) 50%,rgba(168,151,129,.152) 60%,rgba(214,134,116,.103) 70%,rgba(238,120,117,.049) 80%,rgba(249,109,122,.013) 90%,rgba(253,102,127,0) 100%)}
+.caustic .b2{height:calc(4.5vmax + 56px);
+  background:linear-gradient(180deg,rgba(90,110,243,0) 0%,rgba(87,117,237,.012) 10%,rgba(85,127,226,.039) 20%,rgba(89,137,211,.079) 30%,rgba(102,145,191,.119) 40%,rgba(124,149,168,.137) 50%,rgba(157,147,144,.119) 60%,rgba(186,140,130,.079) 70%,rgba(210,132,122,.039) 80%,rgba(229,123,120,.012) 90%,rgba(239,116,120,0) 100%)}
+@media (min-width:900px){
+  .caustic .glow{background:
+    radial-gradient(28% 28% at 50.0% 28.0%,rgba(110,86,255,.221) 0%,rgba(110,86,255,.19) 18%,rgba(110,86,255,.128) 38%,rgba(110,86,255,.064) 57%,rgba(110,86,255,.02) 78%,rgba(110,86,255,0) 100%),
+    radial-gradient(28% 28% at 62.9% 32.2%,rgba(70,128,242,.204) 0%,rgba(70,128,242,.175) 18%,rgba(70,128,242,.118) 38%,rgba(70,128,242,.059) 57%,rgba(70,128,242,.018) 78%,rgba(70,128,242,0) 100%),
+    radial-gradient(28% 28% at 70.9% 43.2%,rgba(22,178,227,.187) 0%,rgba(22,178,227,.161) 18%,rgba(22,178,227,.108) 38%,rgba(22,178,227,.054) 57%,rgba(22,178,227,.017) 78%,rgba(22,178,227,0) 100%),
+    radial-gradient(28% 28% at 70.9% 56.8%,rgba(26,187,192,.17) 0%,rgba(26,187,192,.146) 18%,rgba(26,187,192,.099) 38%,rgba(26,187,192,.049) 57%,rgba(26,187,192,.015) 78%,rgba(26,187,192,0) 100%),
+    radial-gradient(28% 28% at 62.9% 67.8%,rgba(31,199,150,.153) 0%,rgba(31,199,150,.132) 18%,rgba(31,199,150,.089) 38%,rgba(31,199,150,.044) 57%,rgba(31,199,150,.014) 78%,rgba(31,199,150,0) 100%),
+    radial-gradient(28% 28% at 50.0% 72.0%,rgba(149,184,95,.162) 0%,rgba(149,184,95,.139) 18%,rgba(149,184,95,.094) 38%,rgba(149,184,95,.047) 57%,rgba(149,184,95,.015) 78%,rgba(149,184,95,0) 100%),
+    radial-gradient(28% 28% at 37.1% 67.8%,rgba(255,170,46,.17) 0%,rgba(255,170,46,.146) 18%,rgba(255,170,46,.099) 38%,rgba(255,170,46,.049) 57%,rgba(255,170,46,.015) 78%,rgba(255,170,46,0) 100%),
+    radial-gradient(28% 28% at 29.1% 56.8%,rgba(255,127,96,.187) 0%,rgba(255,127,96,.161) 18%,rgba(255,127,96,.108) 38%,rgba(255,127,96,.054) 57%,rgba(255,127,96,.017) 78%,rgba(255,127,96,0) 100%),
+    radial-gradient(28% 28% at 29.1% 43.2%,rgba(255,92,138,.204) 0%,rgba(255,92,138,.175) 18%,rgba(255,92,138,.118) 38%,rgba(255,92,138,.059) 57%,rgba(255,92,138,.018) 78%,rgba(255,92,138,0) 100%),
+    radial-gradient(28% 28% at 37.1% 32.2%,rgba(180,89,199,.212) 0%,rgba(180,89,199,.183) 18%,rgba(180,89,199,.123) 38%,rgba(180,89,199,.062) 57%,rgba(180,89,199,.019) 78%,rgba(180,89,199,0) 100%)}
+  .caustic .band{background:linear-gradient(180deg,rgba(108,88,254,0) 0%,rgba(104,93,253,.014) 10%,rgba(94,103,249,.065) 20%,rgba(76,125,238,.141) 30%,rgba(64,153,211,.178) 40%,rgba(94,171,161,.179) 50%,rgba(176,157,114,.171) 60%,rgba(233,129,109,.135) 70%,rgba(250,110,120,.068) 80%,rgba(254,100,129,.018) 90%,rgba(255,95,135,0) 100%)}
+  .caustic .b2{background:linear-gradient(180deg,rgba(100,96,251,0) 0%,rgba(94,103,248,.013) 10%,rgba(86,115,241,.049) 20%,rgba(79,131,227,.104) 30%,rgba(84,147,202,.151) 40%,rgba(113,157,165,.168) 50%,rgba(168,151,130,.149) 60%,rgba(211,136,117,.103) 70%,rgba(236,121,117,.05) 80%,rgba(248,110,122,.013) 90%,rgba(253,103,127,0) 100%)}
+}
+html.dl-rest .caustic i,html.fx-daylevel .caustic i{animation-play-state:paused}
+
 @media (prefers-reduced-motion:reduce){
   .ringe.schluck,.ringe .welle{animation:none!important}
   .ringe .welle{display:none}
@@ -3022,6 +3063,31 @@ function agg(sc){
   r.schnittKg = r.gewichte.length ? r.gewichte.reduce((s, x) => s + x.kg, 0) / r.gewichte.length : null;
   return r;
 }
+/* maintenance, estimated from the log itself (energy balance): over the 28 days up to `bis` (never today, which is still
+   being logged), the average intake on logged days minus the bodyweight trend at 7'700 kcal per kg. The trend is the
+   least-squares line through the weigh-ins, so one heavy morning moves it little. Needs at least 4 weigh-ins spread
+   over 14 days and 10 logged days between the first and the last. The window stays at 28 days on purpose: maintenance
+   moves with weight and activity, so older weeks would pull it towards an old figure. The range (about 95 %) narrows
+   with more weigh-ins. Days logged incompletely make it read low.
+   → { kcal, pm, tage, wiegen, von, bis } or { fehlt: what is missing } */
+const KCAL_PRO_KG = 7700, ERH_TAGE = 28;
+function erhaltung(bis){
+  const ende = bis < TODAY ? bis : ISO(add(P(TODAY), -1)), anfang = ISO(add(P(ende), -(ERH_TAGE - 1)));
+  const gw = gewichteIn(anfang, ende), m = gw.length;
+  const spanne = m > 1 ? (P(gw[m - 1].iso) - P(gw[0].iso)) / DAY : 0;
+  if (m < 4 || spanne < 14) return { fehlt: m ? 'Needs weigh-ins across 2 weeks' : 'Weigh in on Entry to start' };
+  let n = 0, k = 0;
+  for (let d = P(gw[0].iso); ISO(d) <= gw[m - 1].iso; d = add(d, 1)){ const s = tagSumme(ISO(d)); if (s.n){ n++; k += s.kcal; } }
+  if (n < 10) return { fehlt: 'Needs ' + (10 - n) + ' more logged day' + (10 - n === 1 ? '' : 's') };
+  const x0 = P(gw[0].iso).getTime(), xs = gw.map(g => (P(g.iso) - x0) / DAY), ys = gw.map(g => g.kg);
+  const mx = xs.reduce((s, x) => s + x, 0) / m, my = ys.reduce((s, y) => s + y, 0) / m;
+  let sxx = 0, sxy = 0; xs.forEach((x, i) => { sxx += (x - mx) * (x - mx); sxy += (x - mx) * (ys[i] - my); });
+  const steig = sxy / sxx;
+  let rest = 0; xs.forEach((x, i) => { const e = ys[i] - (my + steig * (x - mx)); rest += e * e; });
+  const fehler = Math.sqrt(rest / Math.max(1, m - 2) / sxx);
+  return { kcal: Math.round((k / n - steig * KCAL_PRO_KG) / 10) * 10, pm: Math.max(10, Math.round(2 * fehler * KCAL_PRO_KG / 10) * 10),
+    tage: n, wiegen: m, von: gw[0].iso, bis: gw[m - 1].iso, schnitt: k / n, kgProWoche: steig * 7 };
+}
 /* weeks for the YTD chart: average per logged day and the average target */
 function wochen(tage){
   const w = [];
@@ -3307,7 +3373,7 @@ function vorperiode(){
   const bis = ISO(add(new Date(Date.UTC(y, m + 1, 1)), -1));
   return { a: agg({ von, bis }), label: ytd ? String(y) : MSHORT[m] };
 }
-/* four lines for the four tiles: daily values (Month) or weekly averages (YTD); the counts as running totals */
+/* the lines for the tiles: daily values (Month) or weekly averages (YTD); the counts as running totals; maintenance as estimated */
 function kpiLinien(a){
   const ytd = S.modus === 'ytd', bisher = a.tage.filter(t => !t.zukunft);
   let nT = 0, nZ = 0;
@@ -3320,8 +3386,12 @@ function kpiLinien(a){
     w.nT = x.nT; w.nZ = x.nZ;
   });
   const geloggt = bisher.filter(t => t.geloggt), mitN = wo.filter(w => w.n);
-  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ), kg: gewichtWochen(a.gewichte).map(w => w.kg) }
-             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ), kg: a.gewichte.map(x => x.kg) };
+  /* maintenance: the estimate as it stood on each day (Month) or at the end of each week (YTD), where there is one */
+  const tageBisGestern = bisher.filter(t => t.iso < TODAY).map(t => t.iso);
+  const erhTage = ytd ? tageBisGestern.filter((iso, i, l) => i === l.length - 1 || ISO(monday(P(l[i + 1]))) !== ISO(monday(P(iso)))) : tageBisGestern;
+  const erh = erhTage.map(iso => erhaltung(iso).kcal).filter(x => x !== undefined);
+  return ytd ? { kcal: mitN.map(w => w.kcal / w.n), p: mitN.map(w => w.p / w.n), tage: wo.map(w => w.nT), ziel: wo.map(w => w.nZ), kg: gewichtWochen(a.gewichte).map(w => w.kg), erh }
+             : { kcal: geloggt.map(t => t.s.kcal), p: geloggt.map(t => t.s.p), tage: lauf.map(x => x.nT), ziel: lauf.map(x => x.nZ), kg: a.gewichte.map(x => x.kg), erh };
 }
 /* weigh-ins as weekly averages (YTD): [{ mo, kg }] */
 function gewichtWochen(liste){
@@ -3789,7 +3859,13 @@ function seiteOverview(){
   const zielTxt = a.schnittDiff === null ? (zielGesetzt() ? 'No target on these days' : 'Set a target to compare') :
     (Math.abs(a.schnittDiff) < 1 ? 'Right on target' : tsd(Math.abs(a.schnittDiff)) + ' kcal ' + (a.schnittDiff > 0 ? 'above' : 'below') + ' target');
   /* KPI tiles: value, sparkline (travelling light), delta against the previous period */
-  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.gewichte.map(x => x.iso + x.kg).join(',')].join('|');
+  /* maintenance as estimated at the end of the period (yesterday while it runs), and at the end of the period before */
+  const erh = erhaltung(sc.bis), erhVor = erhaltung(ISO(add(P(sc.von), -1)));
+  const erhText = erh.fehlt || '\u00b1' + tsd(erh.pm) + ' kcal \u00b7 ' + erh.tage + ' days logged';
+  const erhTitel = erh.fehlt ? 'Maintenance is estimated from what you log and how your weight moves: ' + erh.fehlt.toLowerCase() + '.'
+    : 'Average of ' + tsd(erh.schnitt) + ' kcal on ' + erh.tage + ' logged days, weight trend ' + (erh.kgProWoche < 0 ? '\u2212' : '+') + Math.abs(erh.kgProWoche).toFixed(2) +
+      ' kg per week (' + erh.wiegen + ' weigh-ins, ' + tagKurz(erh.von) + ' to ' + tagKurz(erh.bis) + ', 7\u2019700 kcal per kg). Days logged incompletely make it read low.';
+  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.gewichte.map(x => x.iso + x.kg).join(','), erh.kcal].join('|');
   const kpiRuhig = RUHIG || kpiSchluessel === KPI_ZULETZT; KPI_ZULETZT = kpiSchluessel;
   const vp = vorperiode(), av = vp.a, linien = kpiLinien(a), sparks = [];
   const kachel = (k, wert, einheit, f, fmt, x) => {
@@ -3798,7 +3874,7 @@ function seiteOverview(){
     const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     sv.setAttribute('class', 'spark'); sv.setAttribute('aria-hidden', 'true'); if (x.farbe) sv.style.setProperty('--kpi-farbe', x.farbe);
     const fuss = h('div', { class: 'f' }, [x.delta ? h('span', { class: 'delta ' + (x.delta.gut ? 'delta--up' : 'delta--flat'), title: x.delta.titel }, [x.delta.txt]) : null, h('span', {}, [f])]);
-    const el = h('div', { class: 'glas card kpi kachel' }, [h('div', { class: 'k' }, [k]), h('div', {}, [h('div', { class: 'w' }, [w, einheit ? h('small', {}, [einheit]) : null]), sv, fuss])]);
+    const el = h('div', { class: 'glas card kpi kachel', title: x.titel || null }, [h('div', { class: 'k' }, [k]), h('div', {}, [h('div', { class: 'w' }, [w, einheit ? h('small', {}, [einheit]) : null]), sv, fuss])]);
     const war = RUHIG; if (kpiRuhig) RUHIG = true;
     try { if (wert === null) w.textContent = '\u2013'; else zaehle(w, wert, fmt); } finally { RUHIG = war; }
     sparks.push([sv, x.linie || []]);
@@ -3808,7 +3884,6 @@ function seiteOverview(){
   const vs = 'vs ' + vp.label;
   const dZahl = (d, einheit, besser, titel) => (d === null || !isFinite(d) || Math.round(d) === 0) ? null :
     { txt: (d > 0 ? '+' : '\u2212') + tsd(Math.abs(d)) + (einheit ? ' ' + einheit : '') + ' ' + vs, gut: besser === 0 ? false : (d > 0) === (besser > 0), titel: titel + ' ' + vs };
-  const tageText = S.modus === 'ytd' ? 'days' : 'days';
   /* bodyweight: the last weigh-in of the period, the shift since the last one before it (or the period's first);
      the delta compares the average weight with the period before. Lower counts as better only in a mostly-shred period. */
   const gw = a.gewichte, gwLetzt = gw.length ? gw[gw.length - 1] : null, gwBasis = a.gewichtVorher || (gw.length > 1 ? gw[0] : null);
@@ -3822,8 +3897,8 @@ function seiteOverview(){
       { linie: linien.kcal, farbe: 'var(--energy)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittKcal - av.schnittKcal, 'kcal', 0, 'Average kcal per logged day') : null }),
     kachel('Protein per day', a.geloggt ? a.schnittP : null, 'g', a.mitProteinZiel ? 'Target reached on ' + a.proteinOk + ' of ' + a.mitProteinZiel + ' days' : 'Across logged days', null,
       { linie: linien.p, farbe: 'var(--prot)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittP - av.schnittP, 'g', 1, 'Average protein per logged day') : null }),
-    kachel('Days logged', a.geloggt, 'of ' + a.kalender, a.kalender ? Math.round(a.geloggt / a.kalender * 100) + ' % of the ' + tageText + ' so far' : 'The period has not started', null,
-      { linie: linien.tage, delta: a.kalender && av.kalender && av.geloggt ? dZahl((a.geloggt / a.kalender - av.geloggt / av.kalender) * 100, 'pts', 1, 'Share of days logged, in percentage points,') : null }),
+    kachel('Maintenance', erh.fehlt ? null : erh.kcal, erh.fehlt ? '' : 'kcal', erhText, null,
+      { linie: linien.erh, farbe: 'var(--energy)', titel: erhTitel, delta: !erh.fehlt && !erhVor.fehlt ? dZahl(erh.kcal - erhVor.kcal, 'kcal', 0, 'Estimated maintenance') : null }),
     kachel('Bodyweight', gwLetzt ? gwLetzt.kg : null, gwLetzt ? 'kg' : '', gwText, kg1, { linie: linien.kg, farbe: 'var(--weight)', delta: gwDelta })
   ]));
   /* the lines are drawn once the tiles are on the page (they need their width) */

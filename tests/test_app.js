@@ -18,6 +18,16 @@ const kcal = it => it.k * it.g / 100;
 const okt = Object.entries(fx.days).filter(([k, v]) => k.startsWith('2026-10') && k <= '2026-10-14' && v.items.length);
 const oktAvg = okt.reduce((s, [, d]) => s + d.items.reduce((a, i) => a + kcal(i), 0), 0) / okt.length;
 const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
+/* maintenance, computed here independently: 28 days up to yesterday (13 Oct), least-squares weight trend, 7700 kcal/kg */
+const erhaltung = ende => {
+  const tagNr = iso => Date.parse(iso + 'T00:00:00Z') / 864e5, anfang = new Date((tagNr(ende) - 27) * 864e5).toISOString().slice(0, 10);
+  const gw = Object.keys(fx.weights).filter(k => k >= anfang && k <= ende).sort();
+  const xs = gw.map(tagNr), ys = gw.map(k => fx.weights[k]), mx = xs.reduce((s, x) => s + x, 0) / xs.length, my = ys.reduce((s, y) => s + y, 0) / ys.length;
+  const b = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0) / xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+  const tage = Object.entries(fx.days).filter(([k, v]) => k >= gw[0] && k <= gw[gw.length - 1] && v.items.length);
+  return { kcal: Math.round((tage.reduce((s, [, d]) => s + d.items.reduce((a, i) => a + kcal(i), 0), 0) / tage.length - b * 7700) / 10) * 10, tage: tage.length };
+};
+const erhOkt = erhaltung('2026-10-13'), erhSep = erhaltung('2026-09-30');
 
 (async () => {
   const b = await chromium.launch();
@@ -80,7 +90,13 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   check(await pg.isVisible('#shell'), 'fixture opens');
   let txt = await pg.innerText('#p-overview');
   check(txt.includes(tsd(oktAvg)), 'October average per day ' + tsd(oktAvg) + ' kcal shown');
-  check(txt.includes(String(okt.length)), 'days logged in October: ' + okt.length);
+  // Maintenance replaces Days logged: the estimate, the days it rests on, and the delta against September's estimate
+  const erhKachel = await pg.innerText('.kachel:has-text("Maintenance")');
+  check(!txt.includes('Days logged') && erhKachel.includes(tsd(erhOkt.kcal)) && erhKachel.includes(erhOkt.tage + ' days logged'),
+    'Maintenance tile: ' + tsd(erhOkt.kcal) + ' kcal from ' + erhOkt.tage + ' logged days (shows: ' + erhKachel.replace(/\s+/g, ' ') + ')');
+  check(erhKachel.includes(tsd(Math.abs(erhOkt.kcal - erhSep.kcal)) + ' kcal vs Sep') && !(await pg.$('.kachel:has-text("Maintenance") .delta--up')),
+    'Maintenance delta against September, neutral (' + (erhOkt.kcal - erhSep.kcal) + ' kcal)');
+  check((await pg.getAttribute('.kachel:has-text("Maintenance")', 'title') || '').includes('7’700 kcal per kg'), 'Maintenance explains itself on hover');
   check(txt.includes(tsd(heute)), 'today eaten ' + tsd(heute) + ' kcal shown');
   check(txt.includes('Light shred'), 'today is in the shred phase');
   check(await pg.$$eval('.kacheln .spark path.spark__line', ps => ps.filter(p => (p.getAttribute('d') || '').length > 10).length) >= 2, 'KPI tiles draw their lines');
@@ -112,6 +128,11 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   await seite(pg, 'overview');
   // Glass's drifting light: no blur filter, and it holds still while a page is built (it stalled page changes on the iPhone)
   check(await pg.evaluate(() => document.documentElement.classList.contains('dl-rest')), 'the drifting light rests while a page is built');
+  // Prism's caustic light: the same rule (blurred, moving light under frosted cards made the iPhone lag in Prism)
+  await pg.evaluate(() => Kit.set('prism', 'user')); await pg.waitForTimeout(300);
+  check(await pg.evaluate(() => { const l = [...document.querySelectorAll('.caustic i')]; return l.length === 3 && l.every(i => getComputedStyle(i).filter === 'none'); }), 'Prism: the caustic light has no blur filter');
+  check(await pg.evaluate(() => { Kit.rest(); return [...document.querySelectorAll('.caustic i')].every(i => getComputedStyle(i).animationPlayState === 'paused'); }), 'Prism: the caustic light rests while a page is built');
+  check(await pg.evaluate(() => [...document.querySelectorAll('.ambient *')].every(e => getComputedStyle(e).filter === 'none' || getComputedStyle(e).animationName === 'none')), 'Prism: nothing in the ambient light is both blurred and moving');
   await pg.evaluate(() => Kit.set('glass', 'user')); await pg.waitForTimeout(300);
   check(await pg.evaluate(() => [...document.querySelectorAll('.ambient .orb')].every(o => getComputedStyle(o).filter === 'none')), 'Glass: the drifting light has no blur filter');
   await pg.waitForTimeout(400);
@@ -192,6 +213,31 @@ const heute = fx.days['2026-10-14'].items.reduce((a, i) => a + kcal(i), 0);
   for (let i = 0; i < 3; i++){ await pg.keyboard.press('ArrowLeft'); await pg.waitForTimeout(650); }
   const jahre = await pg.$$eval('#p-overview select', ss => ss.map(s => Array.from(s.options).map(o => o.textContent).join('|') + '=' + s.value));
   check(jahre.some(x => x.startsWith('2025|2026=2025')), 'swiping into 2025 keeps the year list in step: ' + jahre.join(' / '));
+  await ctx.close();
+
+  // ---------------------------------------------------------------- maintenance on a log with a known answer
+  // 2'500 kcal every day and the weight falling 0.1 kg a day: maintenance = 2'500 + 0.1 × 7'700 = 3'270 kcal
+  ({ ctx, pg, errs } = await neu());
+  const banane = fx.days['2026-10-14'].items.find(i => i.name === 'Banana') || fx.days['2026-10-14'].items[0];
+  const bekannt = { app: 'calorie-tracker', v: 1, saved: null, config: fx.config, foods: fx.foods, days: {}, weights: {} };
+  for (let i = 0; i < 40; i++){
+    const iso = new Date(Date.UTC(2026, 8, 4 + i)).toISOString().slice(0, 10);
+    bekannt.days[iso] = { items: [Object.assign({}, banane, { id: 'k' + i, g: 2500 / banane.k * 100 })] };
+    if (i % 2 === 0) bekannt.weights[iso] = Math.round((90 - i * .1) * 10) / 10;
+  }
+  const bekanntFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'cico-')), 'known.json'); fs.writeFileSync(bekanntFile, JSON.stringify(bekannt));
+  await oeffne(pg, bekanntFile);
+  const erhBekannt = await pg.innerText('.kachel:has-text("Maintenance")');
+  check(erhBekannt.includes('3’270') && erhBekannt.includes('±10 kcal'), 'maintenance on a known log: 3’270 kcal, ±10 (shows: ' + erhBekannt.replace(/\s+/g, ' ') + ')');
+  // too little to go on: three weigh-ins only
+  bekannt.weights = { '2026-10-01': 80, '2026-10-05': 79.8, '2026-10-12': 79.9 };
+  fs.writeFileSync(bekanntFile, JSON.stringify(bekannt));
+  await ctx.close();
+  ({ ctx, pg, errs } = await neu());
+  await oeffne(pg, bekanntFile);
+  const erhWenig = await pg.innerText('.kachel:has-text("Maintenance")');
+  check(erhWenig.includes('Needs weigh-ins across 2 weeks') && !/\d’\d{3}\s*kcal/.test(erhWenig.split('Needs')[0]), 'maintenance waits for enough weigh-ins (shows: ' + erhWenig.replace(/\s+/g, ' ') + ')');
+  check(!errs.length, 'no script errors (maintenance): ' + errs.join('; '));
   await ctx.close();
 
   // ---------------------------------------------------------------- optional: the owner's real file (private/, never in the repo)

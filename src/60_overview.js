@@ -74,7 +74,13 @@ function seiteOverview(){
   const zielTxt = a.schnittDiff === null ? (zielGesetzt() ? 'No target on these days' : 'Set a target to compare') :
     (Math.abs(a.schnittDiff) < 1 ? 'Right on target' : tsd(Math.abs(a.schnittDiff)) + ' kcal ' + (a.schnittDiff > 0 ? 'above' : 'below') + ' target');
   /* KPI tiles: value, sparkline (travelling light), delta against the previous period */
-  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.gewichte.map(x => x.iso + x.kg).join(',')].join('|');
+  /* maintenance as estimated at the end of the period (yesterday while it runs), and at the end of the period before */
+  const erh = erhaltung(sc.bis), erhVor = erhaltung(ISO(add(P(sc.von), -1)));
+  const erhText = erh.fehlt || '\u00b1' + tsd(erh.pm) + ' kcal \u00b7 ' + erh.tage + ' days logged';
+  const erhTitel = erh.fehlt ? 'Maintenance is estimated from what you log and how your weight moves: ' + erh.fehlt.toLowerCase() + '.'
+    : 'Average of ' + tsd(erh.schnitt) + ' kcal on ' + erh.tage + ' logged days, weight trend ' + (erh.kgProWoche < 0 ? '\u2212' : '+') + Math.abs(erh.kgProWoche).toFixed(2) +
+      ' kg per week (' + erh.wiegen + ' weigh-ins, ' + tagKurz(erh.von) + ' to ' + tagKurz(erh.bis) + ', 7\u2019700 kcal per kg). Days logged incompletely make it read low.';
+  const kpiSchluessel = [sc.von, sc.bis, S.modus, a.geloggt, Math.round(a.kcal), Math.round(a.p), a.gewichte.map(x => x.iso + x.kg).join(','), erh.kcal].join('|');
   const kpiRuhig = RUHIG || kpiSchluessel === KPI_ZULETZT; KPI_ZULETZT = kpiSchluessel;
   const vp = vorperiode(), av = vp.a, linien = kpiLinien(a), sparks = [];
   const kachel = (k, wert, einheit, f, fmt, x) => {
@@ -83,7 +89,7 @@ function seiteOverview(){
     const sv = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     sv.setAttribute('class', 'spark'); sv.setAttribute('aria-hidden', 'true'); if (x.farbe) sv.style.setProperty('--kpi-farbe', x.farbe);
     const fuss = h('div', { class: 'f' }, [x.delta ? h('span', { class: 'delta ' + (x.delta.gut ? 'delta--up' : 'delta--flat'), title: x.delta.titel }, [x.delta.txt]) : null, h('span', {}, [f])]);
-    const el = h('div', { class: 'glas card kpi kachel' }, [h('div', { class: 'k' }, [k]), h('div', {}, [h('div', { class: 'w' }, [w, einheit ? h('small', {}, [einheit]) : null]), sv, fuss])]);
+    const el = h('div', { class: 'glas card kpi kachel', title: x.titel || null }, [h('div', { class: 'k' }, [k]), h('div', {}, [h('div', { class: 'w' }, [w, einheit ? h('small', {}, [einheit]) : null]), sv, fuss])]);
     const war = RUHIG; if (kpiRuhig) RUHIG = true;
     try { if (wert === null) w.textContent = '\u2013'; else zaehle(w, wert, fmt); } finally { RUHIG = war; }
     sparks.push([sv, x.linie || []]);
@@ -93,7 +99,6 @@ function seiteOverview(){
   const vs = 'vs ' + vp.label;
   const dZahl = (d, einheit, besser, titel) => (d === null || !isFinite(d) || Math.round(d) === 0) ? null :
     { txt: (d > 0 ? '+' : '\u2212') + tsd(Math.abs(d)) + (einheit ? ' ' + einheit : '') + ' ' + vs, gut: besser === 0 ? false : (d > 0) === (besser > 0), titel: titel + ' ' + vs };
-  const tageText = S.modus === 'ytd' ? 'days' : 'days';
   /* bodyweight: the last weigh-in of the period, the shift since the last one before it (or the period's first);
      the delta compares the average weight with the period before. Lower counts as better only in a mostly-shred period. */
   const gw = a.gewichte, gwLetzt = gw.length ? gw[gw.length - 1] : null, gwBasis = a.gewichtVorher || (gw.length > 1 ? gw[0] : null);
@@ -107,8 +112,8 @@ function seiteOverview(){
       { linie: linien.kcal, farbe: 'var(--energy)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittKcal - av.schnittKcal, 'kcal', 0, 'Average kcal per logged day') : null }),
     kachel('Protein per day', a.geloggt ? a.schnittP : null, 'g', a.mitProteinZiel ? 'Target reached on ' + a.proteinOk + ' of ' + a.mitProteinZiel + ' days' : 'Across logged days', null,
       { linie: linien.p, farbe: 'var(--prot)', delta: a.geloggt && av.geloggt ? dZahl(a.schnittP - av.schnittP, 'g', 1, 'Average protein per logged day') : null }),
-    kachel('Days logged', a.geloggt, 'of ' + a.kalender, a.kalender ? Math.round(a.geloggt / a.kalender * 100) + ' % of the ' + tageText + ' so far' : 'The period has not started', null,
-      { linie: linien.tage, delta: a.kalender && av.kalender && av.geloggt ? dZahl((a.geloggt / a.kalender - av.geloggt / av.kalender) * 100, 'pts', 1, 'Share of days logged, in percentage points,') : null }),
+    kachel('Maintenance', erh.fehlt ? null : erh.kcal, erh.fehlt ? '' : 'kcal', erhText, null,
+      { linie: linien.erh, farbe: 'var(--energy)', titel: erhTitel, delta: !erh.fehlt && !erhVor.fehlt ? dZahl(erh.kcal - erhVor.kcal, 'kcal', 0, 'Estimated maintenance') : null }),
     kachel('Bodyweight', gwLetzt ? gwLetzt.kg : null, gwLetzt ? 'kg' : '', gwText, kg1, { linie: linien.kg, farbe: 'var(--weight)', delta: gwDelta })
   ]));
   /* the lines are drawn once the tiles are on the page (they need their width) */

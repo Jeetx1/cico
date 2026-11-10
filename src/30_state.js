@@ -46,6 +46,31 @@ function agg(sc){
   r.schnittKg = r.gewichte.length ? r.gewichte.reduce((s, x) => s + x.kg, 0) / r.gewichte.length : null;
   return r;
 }
+/* maintenance, estimated from the log itself (energy balance): over the 28 days up to `bis` (never today, which is still
+   being logged), the average intake on logged days minus the bodyweight trend at 7'700 kcal per kg. The trend is the
+   least-squares line through the weigh-ins, so one heavy morning moves it little. Needs at least 4 weigh-ins spread
+   over 14 days and 10 logged days between the first and the last. The window stays at 28 days on purpose: maintenance
+   moves with weight and activity, so older weeks would pull it towards an old figure. The range (about 95 %) narrows
+   with more weigh-ins. Days logged incompletely make it read low.
+   → { kcal, pm, tage, wiegen, von, bis } or { fehlt: what is missing } */
+const KCAL_PRO_KG = 7700, ERH_TAGE = 28;
+function erhaltung(bis){
+  const ende = bis < TODAY ? bis : ISO(add(P(TODAY), -1)), anfang = ISO(add(P(ende), -(ERH_TAGE - 1)));
+  const gw = gewichteIn(anfang, ende), m = gw.length;
+  const spanne = m > 1 ? (P(gw[m - 1].iso) - P(gw[0].iso)) / DAY : 0;
+  if (m < 4 || spanne < 14) return { fehlt: m ? 'Needs weigh-ins across 2 weeks' : 'Weigh in on Entry to start' };
+  let n = 0, k = 0;
+  for (let d = P(gw[0].iso); ISO(d) <= gw[m - 1].iso; d = add(d, 1)){ const s = tagSumme(ISO(d)); if (s.n){ n++; k += s.kcal; } }
+  if (n < 10) return { fehlt: 'Needs ' + (10 - n) + ' more logged day' + (10 - n === 1 ? '' : 's') };
+  const x0 = P(gw[0].iso).getTime(), xs = gw.map(g => (P(g.iso) - x0) / DAY), ys = gw.map(g => g.kg);
+  const mx = xs.reduce((s, x) => s + x, 0) / m, my = ys.reduce((s, y) => s + y, 0) / m;
+  let sxx = 0, sxy = 0; xs.forEach((x, i) => { sxx += (x - mx) * (x - mx); sxy += (x - mx) * (ys[i] - my); });
+  const steig = sxy / sxx;
+  let rest = 0; xs.forEach((x, i) => { const e = ys[i] - (my + steig * (x - mx)); rest += e * e; });
+  const fehler = Math.sqrt(rest / Math.max(1, m - 2) / sxx);
+  return { kcal: Math.round((k / n - steig * KCAL_PRO_KG) / 10) * 10, pm: Math.max(10, Math.round(2 * fehler * KCAL_PRO_KG / 10) * 10),
+    tage: n, wiegen: m, von: gw[0].iso, bis: gw[m - 1].iso, schnitt: k / n, kgProWoche: steig * 7 };
+}
 /* weeks for the YTD chart: average per logged day and the average target */
 function wochen(tage){
   const w = [];
